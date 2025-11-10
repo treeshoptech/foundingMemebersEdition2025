@@ -48,11 +48,24 @@ export default defineSchema({
     purchasePrice: v.number(),
     purchaseDate: v.optional(v.number()),
     usefulLifeYears: v.number(),
-    annualHours: v.number(),
-    financeAPR: v.optional(v.number()), // Annual Percentage Rate (e.g., 5.5 for 5.5%)
-    financeTermYears: v.optional(v.number()), // Finance term in years
-    maintenanceCostPerHour: v.number(),
-    fuelCostPerHour: v.number(),
+
+    // Usage Pattern
+    daysPerYear: v.number(), // Days per year in operation (100-300)
+    hoursPerDay: v.number(), // Hours per day when running (2-12)
+    annualHours: v.number(), // Calculated: daysPerYear × hoursPerDay
+
+    // Financing
+    financingType: v.optional(v.string()), // "cash" or "financed"
+    financeAPR: v.optional(v.number()), // Annual Percentage Rate (e.g., 6.5 for 6.5%)
+    financeTermMonths: v.optional(v.number()), // Finance term in months
+    financeDownPayment: v.optional(v.number()), // Down payment amount
+
+    // Operating Costs
+    fuelBurnRate: v.number(), // Gallons per hour (actual consumption)
+    fuelPricePerGallon: v.number(), // Current fuel price
+    maintenanceTier: v.string(), // "minimal", "standard", "intensive"
+    oilChangeInterval: v.number(), // Hours between oil changes
+
     insuranceAnnual: v.number(),
 
     // Auto-calculated Costs
@@ -66,7 +79,6 @@ export default defineSchema({
 
     // Operational Information
     fuelType: v.optional(v.string()),
-    fuelCapacity: v.optional(v.number()), // Gallons or battery capacity
 
     // KPI Tracking Fields
     totalHoursOperated: v.optional(v.number()), // Cumulative hours
