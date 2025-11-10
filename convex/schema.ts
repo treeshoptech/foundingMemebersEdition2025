@@ -27,22 +27,151 @@ export default defineSchema({
     .index("by_workos_user", ["workosUserId"])
     .index("by_organization", ["organizationId"]),
 
-  // Equipment
+  // Equipment - Enhanced with detailed categorization and tracking
   equipment: defineTable({
     organizationId: v.id("organizations"),
+
+    // Basic Information
     name: v.string(),
-    category: v.string(),
+    category: v.string(), // From EQUIPMENT_CATEGORIES
+    type: v.string(), // From EQUIPMENT_TYPES
+
+    // Detailed Equipment Information
+    year: v.optional(v.number()),
+    make: v.optional(v.string()),
+    model: v.optional(v.string()),
+    serialNumber: v.optional(v.string()),
+    vin: v.optional(v.string()),
+    licensePlate: v.optional(v.string()),
+
+    // Financial Information
     purchasePrice: v.number(),
+    purchaseDate: v.optional(v.number()),
     usefulLifeYears: v.number(),
     annualHours: v.number(),
     maintenanceCostPerHour: v.number(),
     fuelCostPerHour: v.number(),
     insuranceAnnual: v.number(),
+
+    // Auto-calculated Costs
     ownershipCostPerHour: v.number(),
     operatingCostPerHour: v.number(),
     totalCostPerHour: v.number(),
+
+    // Status & Condition
+    status: v.string(), // Active, In Maintenance, Out of Service, etc.
+    condition: v.optional(v.string()), // Excellent, Good, Fair, Poor
+
+    // Operational Information
+    fuelType: v.optional(v.string()),
+    fuelCapacity: v.optional(v.number()), // Gallons or battery capacity
+
+    // KPI Tracking Fields
+    totalHoursOperated: v.optional(v.number()), // Cumulative hours
+    lastServiceDate: v.optional(v.number()),
+    nextServiceDue: v.optional(v.number()),
+    currentOdometerReading: v.optional(v.number()), // Miles for vehicles
+
+    // Additional Information
+    notes: v.optional(v.string()),
+    imageUrl: v.optional(v.string()),
+
     createdAt: v.number(),
-  }).index("by_organization", ["organizationId"]),
+  })
+    .index("by_organization", ["organizationId"])
+    .index("by_category", ["organizationId", "category"])
+    .index("by_status", ["organizationId", "status"]),
+
+  // Equipment Attachments
+  equipmentAttachments: defineTable({
+    organizationId: v.id("organizations"),
+    equipmentId: v.id("equipment"),
+
+    // Attachment Information
+    name: v.string(),
+    category: v.string(), // Related to parent equipment category
+    type: v.string(),
+
+    // Details
+    serialNumber: v.optional(v.string()),
+    purchasePrice: v.optional(v.number()),
+    purchaseDate: v.optional(v.number()),
+    condition: v.optional(v.string()),
+
+    // Status
+    status: v.string(), // Active, In Maintenance, etc.
+    notes: v.optional(v.string()),
+
+    createdAt: v.number(),
+  })
+    .index("by_organization", ["organizationId"])
+    .index("by_equipment", ["equipmentId"]),
+
+  // Equipment Usage Logs - For detailed KPI tracking
+  equipmentUsageLogs: defineTable({
+    organizationId: v.id("organizations"),
+    equipmentId: v.id("equipment"),
+    workOrderId: v.optional(v.id("workOrders")),
+
+    // Usage Information
+    date: v.number(),
+    hoursUsed: v.number(),
+    odometerStart: v.optional(v.number()),
+    odometerEnd: v.optional(v.number()),
+
+    // Costs (actual costs for this usage period)
+    fuelUsed: v.optional(v.number()), // Gallons
+    fuelCost: v.optional(v.number()), // Actual $ spent
+    maintenanceCost: v.optional(v.number()), // Any maintenance done
+
+    // Operator & Location
+    operatorId: v.optional(v.id("employees")),
+    jobLocation: v.optional(v.string()),
+
+    // Notes
+    notes: v.optional(v.string()),
+    issuesReported: v.optional(v.string()),
+
+    createdAt: v.number(),
+  })
+    .index("by_organization", ["organizationId"])
+    .index("by_equipment", ["equipmentId"])
+    .index("by_work_order", ["workOrderId"])
+    .index("by_date", ["organizationId", "date"]),
+
+  // Equipment Maintenance Logs
+  equipmentMaintenanceLogs: defineTable({
+    organizationId: v.id("organizations"),
+    equipmentId: v.id("equipment"),
+
+    // Maintenance Information
+    date: v.number(),
+    type: v.string(), // Routine, Repair, Inspection, etc.
+    description: v.string(),
+
+    // Cost Information
+    laborCost: v.optional(v.number()),
+    partsCost: v.optional(v.number()),
+    totalCost: v.number(),
+
+    // Service Details
+    hoursAtService: v.optional(v.number()),
+    odometerAtService: v.optional(v.number()),
+    performedBy: v.optional(v.string()), // Shop name or employee
+
+    // Next Service
+    nextServiceDue: v.optional(v.number()),
+    nextServiceHours: v.optional(v.number()),
+
+    // Documentation
+    invoiceNumber: v.optional(v.string()),
+    notes: v.optional(v.string()),
+
+    createdAt: v.number(),
+  })
+    .index("by_organization", ["organizationId"])
+    .index("by_equipment", ["equipmentId"])
+    .index("by_date", ["organizationId", "date"]),
 
   // Employees
   employees: defineTable({
@@ -118,6 +247,13 @@ export default defineSchema({
         loadoutName: v.string(),
       }),
     ),
+
+    // Financing Options (optional)
+    financingOffered: v.optional(v.boolean()),
+    financingAPR: v.optional(v.number()), // Annual Percentage Rate
+    financingTermMonths: v.optional(v.number()), // Term in months
+    financingMonthlyPayment: v.optional(v.number()), // Calculated monthly payment
+
     createdAt: v.number(),
   }).index("by_organization", ["organizationId"]),
 
