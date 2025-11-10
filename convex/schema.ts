@@ -17,7 +17,7 @@ export default defineSchema({
   users: defineTable({
     email: v.string(),
     name: v.string(),
-    workosUserId: v.string(), // WorkOS user ID from JWT
+    workosUserId: v.optional(v.string()), // WorkOS user ID from JWT
     organizationId: v.id("organizations"),
     role: v.union(v.literal("owner"), v.literal("admin"), v.literal("manager"), v.literal("estimator")),
     createdAt: v.number(),
