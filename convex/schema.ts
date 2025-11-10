@@ -49,6 +49,8 @@ export default defineSchema({
     purchaseDate: v.optional(v.number()),
     usefulLifeYears: v.number(),
     annualHours: v.number(),
+    financeAPR: v.optional(v.number()), // Annual Percentage Rate (e.g., 5.5 for 5.5%)
+    financeTermYears: v.optional(v.number()), // Finance term in years
     maintenanceCostPerHour: v.number(),
     fuelCostPerHour: v.number(),
     insuranceAnnual: v.number(),

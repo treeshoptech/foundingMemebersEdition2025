@@ -49,6 +49,8 @@ export interface EquipmentFormData {
   purchaseDate?: number
   usefulLifeYears: number
   annualHours: number
+  financeAPR?: number
+  financeTermYears?: number
   maintenanceCostPerHour: number
   fuelCostPerHour: number
   insuranceAnnual: number
@@ -415,6 +417,41 @@ export function EquipmentForm({ open, onOpenChange, onSubmit, initialData }: Equ
                   }
                   required
                 />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="financeAPR">Finance APR (%)</Label>
+                  <Input
+                    id="financeAPR"
+                    type="number"
+                    step="0.01"
+                    placeholder="e.g., 5.5"
+                    value={formData.financeAPR || ""}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        financeAPR: e.target.value ? Number.parseFloat(e.target.value) : undefined,
+                      })
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="financeTermYears">Finance Term (years)</Label>
+                  <Input
+                    id="financeTermYears"
+                    type="number"
+                    step="1"
+                    placeholder="e.g., 5"
+                    value={formData.financeTermYears || ""}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        financeTermYears: e.target.value ? Number.parseInt(e.target.value) : undefined,
+                      })
+                    }
+                  />
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">

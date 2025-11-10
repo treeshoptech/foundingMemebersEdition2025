@@ -24,6 +24,8 @@ export const create = mutation({
     purchaseDate: v.optional(v.number()),
     usefulLifeYears: v.number(),
     annualHours: v.number(),
+    financeAPR: v.optional(v.number()),
+    financeTermYears: v.optional(v.number()),
     maintenanceCostPerHour: v.number(),
     fuelCostPerHour: v.number(),
     insuranceAnnual: v.number(),
@@ -47,9 +49,20 @@ export const create = mutation({
     imageUrl: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    // Calculate finance cost if APR and term are provided
+    let annualFinanceCost = 0
+    if (args.financeAPR && args.financeTermYears) {
+      // Simple interest calculation: Principal × Rate × Time
+      // Then divide by term to get annual cost
+      const totalInterest = args.purchasePrice * (args.financeAPR / 100) * args.financeTermYears
+      annualFinanceCost = totalInterest / args.financeTermYears
+    }
+
     // Calculate costs
     const ownershipCostPerHour =
-      args.purchasePrice / (args.usefulLifeYears * args.annualHours) + args.insuranceAnnual / args.annualHours
+      args.purchasePrice / (args.usefulLifeYears * args.annualHours) +
+      args.insuranceAnnual / args.annualHours +
+      annualFinanceCost / args.annualHours
 
     const operatingCostPerHour = args.maintenanceCostPerHour + args.fuelCostPerHour
 
@@ -103,6 +116,8 @@ export const update = mutation({
     purchaseDate: v.optional(v.number()),
     usefulLifeYears: v.number(),
     annualHours: v.number(),
+    financeAPR: v.optional(v.number()),
+    financeTermYears: v.optional(v.number()),
     maintenanceCostPerHour: v.number(),
     fuelCostPerHour: v.number(),
     insuranceAnnual: v.number(),
@@ -128,9 +143,20 @@ export const update = mutation({
   handler: async (ctx, args) => {
     const { id, ...data } = args
 
+    // Calculate finance cost if APR and term are provided
+    let annualFinanceCost = 0
+    if (data.financeAPR && data.financeTermYears) {
+      // Simple interest calculation: Principal × Rate × Time
+      // Then divide by term to get annual cost
+      const totalInterest = data.purchasePrice * (data.financeAPR / 100) * data.financeTermYears
+      annualFinanceCost = totalInterest / data.financeTermYears
+    }
+
     // Recalculate costs
     const ownershipCostPerHour =
-      data.purchasePrice / (data.usefulLifeYears * data.annualHours) + data.insuranceAnnual / data.annualHours
+      data.purchasePrice / (data.usefulLifeYears * data.annualHours) +
+      data.insuranceAnnual / data.annualHours +
+      annualFinanceCost / data.annualHours
 
     const operatingCostPerHour = data.maintenanceCostPerHour + data.fuelCostPerHour
 
