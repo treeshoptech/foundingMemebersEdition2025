@@ -16,17 +16,23 @@ export default function Home() {
             <Image src="/logo.png" alt="TreeShop" width={120} height={40} className="object-contain" />
             <Badge variant="secondary" className="hidden sm:inline-flex">Founding Members 2025</Badge>
           </div>
-          <div className="flex gap-2">
-            <Link href="https://treeshop.app" target="_blank">
-              <Button variant="ghost">Learn More</Button>
-            </Link>
-            <Link href="/auth/login">
-              <Button variant="outline">Sign In</Button>
-            </Link>
-            <Link href="/dashboard">
-              <Button>Launch App</Button>
-            </Link>
-          </div>
+          <form action="/auth/login" method="GET" className="flex items-center gap-3">
+            <div className="hidden md:flex items-center gap-3">
+              <input
+                type="email"
+                placeholder="Email"
+                className="px-3 py-2 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                required
+              />
+              <input
+                type="password"
+                placeholder="Password"
+                className="px-3 py-2 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                required
+              />
+            </div>
+            <Button type="submit">Sign In</Button>
+          </form>
         </div>
       </header>
 
