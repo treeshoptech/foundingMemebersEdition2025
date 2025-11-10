@@ -11,6 +11,7 @@
   "dependencies": {
     "@auth0/auth0-react": "latest",
     "@clerk/clerk-react": "latest",
+    "@convex-dev/workos": "^0.0.1",
     "@emotion/react": "^11.13.0",
     "@emotion/styled": "^11.13.0",
     "@mui/icons-material": "latest",
