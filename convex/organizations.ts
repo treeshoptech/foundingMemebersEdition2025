@@ -6,6 +6,7 @@ export const getOrCreateFromWorkOS = mutation({
   args: {
     workosOrgId: v.string(),
     workosOrgName: v.string(),
+    workosUserId: v.string(),
     userEmail: v.string(),
     userName: v.string(),
   },
