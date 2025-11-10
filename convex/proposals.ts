@@ -25,6 +25,11 @@ export const create = mutation({
         loadoutName: v.string(),
       }),
     ),
+    // Optional financing fields
+    financingOffered: v.optional(v.boolean()),
+    financingAPR: v.optional(v.number()),
+    financingTermMonths: v.optional(v.number()),
+    financingMonthlyPayment: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     // Calculate total investment
@@ -39,6 +44,10 @@ export const create = mutation({
       totalInvestment,
       status: "draft",
       lineItems: args.lineItems,
+      financingOffered: args.financingOffered,
+      financingAPR: args.financingAPR,
+      financingTermMonths: args.financingTermMonths,
+      financingMonthlyPayment: args.financingMonthlyPayment,
       createdAt: Date.now(),
     })
 
@@ -93,6 +102,11 @@ export const update = mutation({
         loadoutName: v.string(),
       }),
     ),
+    // Optional financing fields
+    financingOffered: v.optional(v.boolean()),
+    financingAPR: v.optional(v.number()),
+    financingTermMonths: v.optional(v.number()),
+    financingMonthlyPayment: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const { id, ...data } = args
@@ -104,6 +118,21 @@ export const update = mutation({
       ...data,
       totalInvestment,
     })
+  },
+})
+
+// Update financing options
+export const updateFinancing = mutation({
+  args: {
+    id: v.id("proposals"),
+    financingOffered: v.boolean(),
+    financingAPR: v.optional(v.number()),
+    financingTermMonths: v.optional(v.number()),
+    financingMonthlyPayment: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const { id, ...data } = args
+    await ctx.db.patch(id, data)
   },
 })
 
