@@ -6,11 +6,14 @@ import { Card, CardContent } from "@/components/ui/card"
 import { AlertCircle } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import Link from "next/link"
+import { useQuery } from "convex/react"
+import { api } from "@/convex/_generated/api"
 
 export default function CalculatorPage() {
   const { user } = useAuth()
 
-  const loadouts: any[] = []
+  // Connect to live Convex data
+  const loadouts = useQuery(api.loadouts.list, user?.organizationId ? { organizationId: user.organizationId as any } : "skip") || []
 
   if (loadouts.length === 0) {
     return (

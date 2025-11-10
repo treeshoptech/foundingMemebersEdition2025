@@ -6,14 +6,17 @@ import { Button } from "@/components/ui/button"
 import { Wrench, Layers, FileText, DollarSign, TrendingUp, Clock, Plus } from "lucide-react"
 import { formatCurrency } from "@/lib/pricing-calculator"
 import Link from "next/link"
+import { useQuery } from "convex/react"
+import { api } from "@/convex/_generated/api"
 
 export default function DashboardPage() {
   const { user } = useAuth()
 
-  const equipment = []
-  const employees = []
-  const loadouts = []
-  const proposals = []
+  // Connect to live Convex data
+  const equipment = useQuery(api.equipment.list, user?.organizationId ? { organizationId: user.organizationId as any } : "skip") || []
+  const employees = useQuery(api.employees.list, user?.organizationId ? { organizationId: user.organizationId as any } : "skip") || []
+  const loadouts = useQuery(api.loadouts.list, user?.organizationId ? { organizationId: user.organizationId as any } : "skip") || []
+  const proposals = useQuery(api.proposals.list, user?.organizationId ? { organizationId: user.organizationId as any } : "skip") || []
 
   const totalProposalValue = proposals?.reduce((sum: number, p: any) => sum + p.totalInvestment, 0) || 0
   const activeProposals = proposals?.filter((p: any) => p.status === "sent" || p.status === "draft").length || 0
@@ -25,26 +28,6 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-8">
-      <Card className="border-orange-500/50 bg-orange-500/10">
-        <CardHeader>
-          <CardTitle className="text-orange-600 dark:text-orange-400">Demo Mode - Backend Not Connected</CardTitle>
-          <CardDescription>
-            You're viewing the UI in demo mode. Connect Convex to enable data persistence.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-2 text-sm">
-          <p>To enable full functionality:</p>
-          <ol className="list-decimal list-inside space-y-1 text-muted-foreground ml-2">
-            <li>
-              Add <code className="bg-muted px-1 rounded">NEXT_PUBLIC_CONVEX_URL</code> in the Vars section (sidebar)
-            </li>
-            <li>
-              Run <code className="bg-muted px-1 rounded">npx convex dev</code> to sync your schema
-            </li>
-            <li>Configure WorkOS for authentication</li>
-          </ol>
-        </CardContent>
-      </Card>
 
       <div>
         <h1 className="text-3xl font-bold">Dashboard</h1>
