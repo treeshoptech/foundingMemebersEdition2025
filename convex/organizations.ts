@@ -10,11 +10,19 @@ export const getOrCreateFromWorkOS = mutation({
     userName: v.string(),
   },
   handler: async (ctx, args) => {
+    console.log('[Convex] getOrCreateFromWorkOS called with:', {
+      workosOrgId: args.workosOrgId,
+      workosOrgName: args.workosOrgName,
+      userEmail: args.userEmail,
+    });
+
     // Check if organization already exists
     const existingOrg = await ctx.db
       .query("organizations")
       .withIndex("by_workos_org", (q) => q.eq("workosOrgId", args.workosOrgId))
       .first()
+
+    console.log('[Convex] Existing org:', existingOrg ? existingOrg._id : 'none');
 
     if (existingOrg) {
       // Check if user exists
@@ -23,7 +31,22 @@ export const getOrCreateFromWorkOS = mutation({
         .withIndex("by_email", (q) => q.eq("email", args.userEmail))
         .first()
 
+      console.log('[Convex] Existing user:', existingUser ? existingUser._id : 'none');
+
       if (existingUser) {
+        // Validate that the user's organizationId matches the org
+        if (existingUser.organizationId !== existingOrg._id) {
+          console.error('[Convex] CORRUPTED DATA: User organizationId mismatch!', {
+            userOrgId: existingUser.organizationId,
+            actualOrgId: existingOrg._id,
+          });
+          // Fix the corrupted data
+          await ctx.db.patch(existingUser._id, {
+            organizationId: existingOrg._id,
+          });
+          console.log('[Convex] Fixed user organizationId');
+        }
+
         return {
           organizationId: existingOrg._id,
           organizationName: existingOrg.name,
@@ -33,6 +56,7 @@ export const getOrCreateFromWorkOS = mutation({
       }
 
       // Create user if doesn't exist
+      console.log('[Convex] Creating new user for existing org');
       const userId = await ctx.db.insert("users", {
         email: args.userEmail,
         name: args.userName,

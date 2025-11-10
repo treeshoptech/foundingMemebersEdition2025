@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
       font-family: system-ui, -apple-system, sans-serif;
       display: flex;
       align-items: center;
-      justify-center;
+      justify-content: center;
       height: 100vh;
       margin: 0;
       background: #000;
@@ -35,23 +35,41 @@ export async function GET(request: NextRequest) {
       100% { transform: rotate(360deg); }
     }
   </style>
+</head>
+<body>
+  <div class="loader">
+    <div class="spinner"></div>
+    <p>Setting up your account...</p>
+  </div>
   <script type="module">
     async function completeSetup() {
       try {
+        console.log('[Auth Complete] Starting setup...');
         const sessionDataStr = localStorage.getItem('treeshop_workos_session');
+        console.log('[Auth Complete] Session data:', sessionDataStr);
+
         if (!sessionDataStr) {
           throw new Error('No session data found');
         }
 
         const workosSession = JSON.parse(sessionDataStr);
+        console.log('[Auth Complete] WorkOS session:', workosSession);
 
         // Import Convex client
-        const { ConvexHttpClient } = await import("convex/browser");
-        const client = new ConvexHttpClient("https://patient-raccoon-944.convex.cloud");
+        const { ConvexHttpClient } = await import("https://esm.sh/convex@1.16.2/browser");
+        const client = new ConvexHttpClient("https://avid-dinosaur-776.convex.cloud");
+        console.log('[Auth Complete] Convex client created');
 
         // Get or create organization in Convex
+        console.log('[Auth Complete] Calling getOrCreateFromWorkOS mutation...');
+        const api = {
+          organizations: {
+            getOrCreateFromWorkOS: "organizations:getOrCreateFromWorkOS"
+          }
+        };
+
         const result = await client.mutation(
-          "organizations:getOrCreateFromWorkOS" as any,
+          api.organizations.getOrCreateFromWorkOS,
           {
             workosOrgId: workosSession.workosOrganizationId,
             workosOrgName: workosSession.organizationName,
@@ -59,6 +77,7 @@ export async function GET(request: NextRequest) {
             userName: workosSession.name,
           }
         );
+        console.log('[Auth Complete] Mutation result:', result);
 
         // Create final session with Convex IDs
         const convexSession = {
@@ -70,9 +89,11 @@ export async function GET(request: NextRequest) {
           email: workosSession.email,
           role: "owner"
         };
+        console.log('[Auth Complete] Convex session:', convexSession);
 
         // Store the proper session
         localStorage.setItem('treeshop_user', JSON.stringify(convexSession));
+        console.log('[Auth Complete] Session stored, redirecting to dashboard...');
 
         // Clean up WorkOS session
         localStorage.removeItem('treeshop_workos_session');
@@ -80,7 +101,8 @@ export async function GET(request: NextRequest) {
         // Redirect to dashboard
         window.location.href = '/dashboard';
       } catch (error) {
-        console.error('Setup error:', error);
+        console.error('[Auth Complete] Setup error:', error);
+        alert('Authentication setup failed: ' + error.message + '. Please check the browser console for details.');
         window.location.href = '/?error=setup_failed';
       }
     }
