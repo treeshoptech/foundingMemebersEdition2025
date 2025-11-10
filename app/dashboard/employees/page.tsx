@@ -1,0 +1,117 @@
+"use client"
+
+import { useState } from "react"
+import { useAuth } from "@/lib/auth-context"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { EmployeeForm, type EmployeeFormData } from "@/components/employee-form"
+import { Plus, Pencil, Trash2 } from "lucide-react"
+
+export default function EmployeesPage() {
+  const { user } = useAuth()
+  const [isFormOpen, setIsFormOpen] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
+
+  const employees: any[] = []
+
+  const handleSubmit = async (data: EmployeeFormData) => {
+    if (!user) return
+    console.log("[v0] Employee data to save:", data)
+    // Would save to Convex when connected
+    setEditingId(null)
+    setIsFormOpen(false)
+  }
+
+  const handleEdit = (id: string) => {
+    setEditingId(id)
+    setIsFormOpen(true)
+  }
+
+  const handleDelete = async (id: string) => {
+    if (confirm("Are you sure you want to delete this employee?")) {
+      console.log("[v0] Delete employee:", id)
+      // Would delete from Convex when connected
+    }
+  }
+
+  const editingEmployee = employees?.find((e) => e._id === editingId)
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold">Employees</h1>
+          <p className="text-muted-foreground">Manage your employees and calculate true hourly costs</p>
+        </div>
+        <Button
+          onClick={() => {
+            setEditingId(null)
+            setIsFormOpen(true)
+          }}
+        >
+          <Plus className="mr-2 h-4 w-4" />
+          Add Employee
+        </Button>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Employee List</CardTitle>
+          <CardDescription>All employees with true hourly costs including burden</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {employees.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              No employees added yet. Click "Add Employee" to get started.
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Position</TableHead>
+                  <TableHead className="text-right">Base Rate</TableHead>
+                  <TableHead className="text-right">Burden</TableHead>
+                  <TableHead className="text-right">True Cost/Hour</TableHead>
+                  <TableHead className="w-[100px]">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {employees.map((item) => (
+                  <TableRow key={item._id}>
+                    <TableCell className="font-medium">{item.name}</TableCell>
+                    <TableCell>{item.position}</TableCell>
+                    <TableCell className="text-right">${item.baseHourlyRate.toFixed(2)}</TableCell>
+                    <TableCell className="text-right">{item.burdenMultiplier}x</TableCell>
+                    <TableCell className="text-right font-semibold">${item.trueCostPerHour.toFixed(2)}</TableCell>
+                    <TableCell>
+                      <div className="flex gap-2">
+                        <Button variant="ghost" size="icon" onClick={() => handleEdit(item._id)}>
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => handleDelete(item._id)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+
+      <EmployeeForm
+        open={isFormOpen}
+        onOpenChange={(open) => {
+          setIsFormOpen(open)
+          if (!open) setEditingId(null)
+        }}
+        onSubmit={handleSubmit}
+        initialData={editingEmployee}
+      />
+    </div>
+  )
+}
