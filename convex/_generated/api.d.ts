@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as debug from "../debug.js";
 import type * as employees from "../employees.js";
 import type * as equipment from "../equipment.js";
 import type * as init from "../init.js";
@@ -16,6 +17,7 @@ import type * as leads from "../leads.js";
 import type * as loadouts from "../loadouts.js";
 import type * as organizations from "../organizations.js";
 import type * as proposals from "../proposals.js";
+import type * as wipe from "../wipe.js";
 import type * as workOrders from "../workOrders.js";
 
 import type {
@@ -33,6 +35,7 @@ import type {
  * ```
  */
 declare const fullApi: ApiFromModules<{
+  debug: typeof debug;
   employees: typeof employees;
   equipment: typeof equipment;
   init: typeof init;
@@ -41,6 +44,7 @@ declare const fullApi: ApiFromModules<{
   loadouts: typeof loadouts;
   organizations: typeof organizations;
   proposals: typeof proposals;
+  wipe: typeof wipe;
   workOrders: typeof workOrders;
 }>;
 declare const fullApiWithMounts: typeof fullApi;

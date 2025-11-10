@@ -53,3 +53,32 @@ export const getDemoOrganization = query({
     return demoOrg || null
   },
 })
+
+// Fix: Link existing organization to WorkOS org ID
+export const linkWorkOSOrg = mutation({
+  args: {
+    organizationName: v.string(),
+    workosOrgId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    // Find organization by name
+    const orgs = await ctx.db.query("organizations").collect()
+    const org = orgs.find(o => o.name.includes(args.organizationName))
+
+    if (!org) {
+      throw new Error(`Organization with name containing "${args.organizationName}" not found`)
+    }
+
+    // Update with WorkOS org ID
+    await ctx.db.patch(org._id, {
+      workosOrgId: args.workosOrgId,
+    })
+
+    return {
+      message: "Successfully linked organization to WorkOS",
+      organizationId: org._id,
+      organizationName: org.name,
+      workosOrgId: args.workosOrgId,
+    }
+  },
+})

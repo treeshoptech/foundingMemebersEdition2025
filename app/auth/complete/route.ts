@@ -6,7 +6,7 @@ export async function GET(request: NextRequest) {
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Setting up your account...</title>
+  <title>Signing in...</title>
   <style>
     body {
       font-family: system-ui, -apple-system, sans-serif;
@@ -39,12 +39,12 @@ export async function GET(request: NextRequest) {
 <body>
   <div class="loader">
     <div class="spinner"></div>
-    <p>Setting up your account...</p>
+    <p>Signing in...</p>
   </div>
   <script type="module">
-    async function completeSetup() {
+    async function completeSignIn() {
       try {
-        console.log('[Auth Complete] Starting setup...');
+        console.log('[Auth Complete] Completing sign in...');
         const sessionDataStr = localStorage.getItem('treeshop_workos_session');
         console.log('[Auth Complete] Session data:', sessionDataStr);
 
@@ -79,6 +79,18 @@ export async function GET(request: NextRequest) {
         );
         console.log('[Auth Complete] Mutation result:', result);
 
+        // Validate the organization ID
+        if (!result.organizationId) {
+          throw new Error('No organization ID returned from mutation');
+        }
+
+        // Validate that it's actually an organizations table ID
+        const orgIdStr = String(result.organizationId);
+        if (orgIdStr.includes('projects') || !orgIdStr.includes('organizations')) {
+          console.error('[Auth Complete] CORRUPTED ORG ID DETECTED:', result.organizationId);
+          throw new Error('Received invalid organization ID from server. Please contact support.');
+        }
+
         // Create final session with Convex IDs
         const convexSession = {
           userId: result.userId,
@@ -101,13 +113,13 @@ export async function GET(request: NextRequest) {
         // Redirect to dashboard
         window.location.href = '/dashboard';
       } catch (error) {
-        console.error('[Auth Complete] Setup error:', error);
-        alert('Authentication setup failed: ' + error.message + '. Please check the browser console for details.');
-        window.location.href = '/?error=setup_failed';
+        console.error('[Auth Complete] Sign in error:', error);
+        alert('Sign in failed: ' + error.message + '. Please check the browser console for details.');
+        window.location.href = '/?error=signin_failed';
       }
     }
 
-    completeSetup();
+    completeSignIn();
   </script>
 </body>
 </html>
