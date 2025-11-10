@@ -10,6 +10,7 @@
 
 import type * as employees from "../employees.js";
 import type * as equipment from "../equipment.js";
+import type * as init from "../init.js";
 import type * as invoices from "../invoices.js";
 import type * as leads from "../leads.js";
 import type * as loadouts from "../loadouts.js";
@@ -33,6 +34,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   employees: typeof employees;
   equipment: typeof equipment;
+  init: typeof init;
   invoices: typeof invoices;
   leads: typeof leads;
   loadouts: typeof loadouts;

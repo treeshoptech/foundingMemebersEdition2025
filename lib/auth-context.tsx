@@ -23,8 +23,8 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 const DEMO_USER: User = {
-  userId: "demo-user-1",
-  organizationId: "demo-org-1",
+  userId: "k57015tkwh8r3mj078n4fra2s97v4ckd",
+  organizationId: "kd74nxbz8vv2q7cv57p9chbhts7v4znm",
   organizationName: "Demo Tree Service Co.",
   name: "Demo User",
   email: "demo@treeshop.app",
