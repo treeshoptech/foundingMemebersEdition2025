@@ -261,10 +261,10 @@ export default function ReportsPage() {
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Well Utilized</CardTitle>
-                  <TrendingUp className="h-4 w-4 text-green-500" />
+                  <TrendingUp className="h-4 w-4 text-primary" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-green-500">
+                  <div className="text-2xl font-bold text-primary">
                     {utilizationReport?.summary.wellUtilized || 0}
                   </div>
                   <p className="text-xs text-muted-foreground">50-100% utilization</p>
@@ -274,10 +274,10 @@ export default function ReportsPage() {
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Underutilized</CardTitle>
-                  <TrendingDown className="h-4 w-4 text-yellow-500" />
+                  <TrendingDown className="h-4 w-4 text-accent" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-yellow-500">
+                  <div className="text-2xl font-bold text-accent">
                     {utilizationReport?.summary.underutilized || 0}
                   </div>
                   <p className="text-xs text-muted-foreground">Below 50% utilization</p>
@@ -321,20 +321,20 @@ export default function ReportsPage() {
                           <span
                             className={`text-lg font-bold ${
                               eq.utilizationRate < 50
-                                ? "text-yellow-500"
+                                ? "text-accent"
                                 : eq.utilizationRate > 100
-                                  ? "text-red-500"
-                                  : "text-green-500"
+                                  ? "text-destructive"
+                                  : "text-primary"
                             }`}
                           >
                             {eq.utilizationRate.toFixed(1)}%
                           </span>
                           {eq.utilizationRate < 50 ? (
-                            <TrendingDown className="h-4 w-4 text-yellow-500" />
+                            <TrendingDown className="h-4 w-4 text-accent" />
                           ) : eq.utilizationRate > 100 ? (
-                            <AlertCircle className="h-4 w-4 text-red-500" />
+                            <AlertCircle className="h-4 w-4 text-destructive" />
                           ) : (
-                            <TrendingUp className="h-4 w-4 text-green-500" />
+                            <TrendingUp className="h-4 w-4 text-primary" />
                           )}
                         </div>
                         <p className="text-sm text-muted-foreground">
@@ -367,10 +367,10 @@ export default function ReportsPage() {
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Under Budget</CardTitle>
-                  <TrendingUp className="h-4 w-4 text-green-500" />
+                  <TrendingUp className="h-4 w-4 text-primary" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-green-500">
+                  <div className="text-2xl font-bold text-primary">
                     {costEfficiencyReport?.summary.equipmentUnderBudget || 0}
                   </div>
                   <p className="text-xs text-muted-foreground">Equipment under estimated costs</p>
@@ -385,7 +385,7 @@ export default function ReportsPage() {
                 <CardContent>
                   <div
                     className={`text-2xl font-bold ${
-                      (costEfficiencyReport?.summary.totalVariance || 0) > 0 ? "text-red-500" : "text-green-500"
+                      (costEfficiencyReport?.summary.totalVariance || 0) > 0 ? "text-destructive" : "text-primary"
                     }`}
                   >
                     ${Math.abs(costEfficiencyReport?.summary.totalVariance || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -421,7 +421,7 @@ export default function ReportsPage() {
                       <div className="text-right space-y-1">
                         <div
                           className={`text-lg font-bold ${
-                            eq.costs.totalVariance > 0 ? "text-red-500" : "text-green-500"
+                            eq.costs.totalVariance > 0 ? "text-destructive" : "text-primary"
                           }`}
                         >
                           {eq.costs.totalVariance > 0 ? "+" : ""}$

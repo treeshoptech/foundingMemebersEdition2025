@@ -40,7 +40,7 @@ export default function Home() {
                 </Button>
                 <div className="text-center space-y-2">
                   <p className="text-sm text-muted-foreground">
-                    <CheckCircle2 className="h-4 w-4 inline text-green-500 mr-1" />
+                    <CheckCircle2 className="h-4 w-4 inline text-accent mr-1" />
                     Founding Member Price: $5,000/year (locked in forever)
                   </p>
                   <p className="text-xs text-muted-foreground">
