@@ -29,7 +29,7 @@ export const initializeDemoOrganization = mutation({
     const userId = await ctx.db.insert("users", {
       email: "demo@treeshop.app",
       name: "Demo User",
-      passwordHash: "demo-hash", // Not used in demo mode
+      workosUserId: "demo-workos-id",
       organizationId: orgId,
       role: "owner",
       createdAt: Date.now(),

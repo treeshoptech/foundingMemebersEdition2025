@@ -1,8 +1,9 @@
 "use client"
 
-import type React from "react"
-import { createContext, useContext, useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
+import React, { createContext, useContext, useEffect } from "react"
+import { useAuth as useWorkOSAuth } from "@workos-inc/authkit-nextjs/components"
+import { useQuery, useMutation } from "convex/react"
+import { api } from "@/convex/_generated/api"
 
 interface User {
   userId: string
@@ -23,63 +24,54 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-const DEMO_USER: User = {
-  userId: "k57015tkwh8r3mj078n4fra2s97v4ckd",
-  organizationId: "kd74nxbz8vv2q7cv57p9chbhts7v4znm",
-  organizationName: "Demo Tree Service Co.",
-  name: "Demo User",
-  email: "demo@treeshop.app",
-  role: "owner",
-}
-
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const router = useRouter()
+  const { user: workosUser, loading: workosLoading } = useWorkOSAuth()
+  const getOrCreateUser = useMutation(api.users.getOrCreateUser)
 
+  // Get or create Convex user based on WorkOS user
+  const convexUser = useQuery(
+    api.users.getCurrentUser,
+    workosUser?.id ? { workosUserId: workosUser.id } : "skip"
+  )
+
+  // Auto-create user in Convex on first login
   useEffect(() => {
-    const storedUser = localStorage.getItem("treeshop_user")
-
-    if (storedUser) {
-      try {
-        const parsedUser = JSON.parse(storedUser)
-        // Validate that the organizationId is a proper Convex ID
-        if (parsedUser.organizationId && parsedUser.organizationId.length > 20) {
-          setUser(parsedUser)
-        } else {
-          // Old demo user with invalid ID - replace with new one
-          console.log("[v0] Replacing old demo user with valid organization ID")
-          localStorage.setItem("treeshop_user", JSON.stringify(DEMO_USER))
-          setUser(DEMO_USER)
-        }
-      } catch (error) {
-        localStorage.removeItem("treeshop_user")
-        setUser(DEMO_USER)
-        localStorage.setItem("treeshop_user", JSON.stringify(DEMO_USER))
-      }
-    } else {
-      console.log("[v0] No auth configured, using demo user")
-      setUser(DEMO_USER)
-      localStorage.setItem("treeshop_user", JSON.stringify(DEMO_USER))
+    if (workosUser && !convexUser && !workosLoading) {
+      getOrCreateUser({
+        workosUserId: workosUser.id,
+        email: workosUser.email,
+        name: `${workosUser.firstName || ""} ${workosUser.lastName || ""}`.trim() || workosUser.email,
+      })
     }
+  }, [workosUser, convexUser, workosLoading, getOrCreateUser])
 
-    setIsLoading(false)
-  }, [])
-
-  const signIn = (userData: User) => {
-    setUser(userData)
-    localStorage.setItem("treeshop_user", JSON.stringify(userData))
-  }
+  const user: User | null = convexUser
+    ? {
+        userId: convexUser._id,
+        organizationId: convexUser.organizationId,
+        organizationName: "", // Will load from org
+        name: convexUser.name,
+        email: convexUser.email,
+        role: convexUser.role,
+      }
+    : null
 
   const signOut = () => {
-    setUser(null)
-    localStorage.removeItem("treeshop_user")
-    localStorage.removeItem("treeshop_workos_session")
-    // Redirect to WorkOS logout which will clean up and redirect to home
     window.location.href = "/auth/logout"
   }
 
-  return <AuthContext.Provider value={{ user, isLoading, signIn, signOut }}>{children}</AuthContext.Provider>
+  return (
+    <AuthContext.Provider
+      value={{
+        user,
+        isLoading: workosLoading || (workosUser && !convexUser),
+        signIn: () => {},
+        signOut,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  )
 }
 
 export function useAuth() {

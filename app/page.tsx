@@ -4,25 +4,117 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Calculator, FileText, Users, Wrench, TrendingUp, Zap, Shield, Clock, CheckCircle2, Sparkles } from "lucide-react"
+import { Calculator, FileText, Users, Wrench, TrendingUp, Zap, Shield, Clock, CheckCircle2, Sparkles, LogIn, ArrowRight } from "lucide-react"
 import Image from "next/image"
 
 export default function Home() {
   return (
     <div className="flex min-h-screen flex-col bg-gradient-to-b from-background to-muted/20">
-      <header className="border-b backdrop-blur-sm bg-background/95 sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Image src="/logo.png" alt="TreeShop" width={120} height={40} className="object-contain" />
-            <Badge variant="secondary" className="hidden sm:inline-flex">Founding Members 2025</Badge>
-          </div>
-          <Button onClick={() => window.location.href = '/sign-in'}>
-            Sign In
-          </Button>
-        </div>
-      </header>
-
       <main className="flex-1">
+        {/* Two-Panel Hero */}
+        <section className="container mx-auto px-4 py-12">
+          <div className="grid lg:grid-cols-2 gap-8 max-w-7xl mx-auto">
+            {/* Founding Members Login Panel */}
+            <Card className="border-primary bg-gradient-to-br from-primary/20 to-primary/5">
+              <CardHeader className="text-center space-y-4 pt-12 pb-8">
+                <div className="flex justify-center">
+                  <Image src="/logo.png" alt="TreeShop" width={160} height={53} className="object-contain" />
+                </div>
+                <Badge variant="default" className="text-base px-4 py-1 mx-auto">
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  Founding Members 2025
+                </Badge>
+                <CardTitle className="text-3xl">Member Login</CardTitle>
+                <CardDescription className="text-lg">
+                  Access your TreeShop dashboard
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6 pb-12">
+                <Button
+                  size="lg"
+                  className="w-full text-lg h-14"
+                  onClick={() => window.location.href = '/sign-in'}
+                >
+                  <LogIn className="mr-2 h-5 w-5" />
+                  Login to Dashboard
+                </Button>
+                <div className="text-center space-y-2">
+                  <p className="text-sm text-muted-foreground">
+                    <CheckCircle2 className="h-4 w-4 inline text-green-500 mr-1" />
+                    Founding Member Price: $5,000/year (locked in forever)
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Don't have an account?{" "}
+                    <Button
+                      variant="link"
+                      className="px-1 h-auto"
+                      onClick={() => window.location.href = '/sign-up'}
+                    >
+                      Sign up here
+                    </Button>
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Marketing Panel */}
+            <Card className="border-muted">
+              <CardHeader className="text-center space-y-4 pt-12 pb-8">
+                <CardTitle className="text-4xl">
+                  Stop Guessing.
+                  <br />
+                  <span className="text-primary">Start Profiting.</span>
+                </CardTitle>
+                <CardDescription className="text-lg">
+                  The first scientifically-backed pricing system for tree service professionals
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6 pb-12">
+                <div className="space-y-4">
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                      <Calculator className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold mb-1">TreeShop Score™ System</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Scientific pricing for all services with 80+ complexity factors
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                      <TrendingUp className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold mb-1">7,680% Average ROI</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Increase close rate by 10-20% with transparent, scientific pricing
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                      <FileText className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold mb-1">Professional Proposals</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Digital signatures, PDF export, and complete workflow tracking
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <Link href="https://treeshop.app" target="_blank">
+                  <Button size="lg" variant="outline" className="w-full text-lg h-14">
+                    Learn More
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+          </div>
+        </section>
         {/* Hero Section */}
         <section className="container mx-auto px-4 py-20 md:py-32">
           <div className="max-w-4xl mx-auto text-center space-y-8">

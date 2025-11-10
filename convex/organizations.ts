@@ -64,7 +64,7 @@ export const getOrCreateFromWorkOS = mutation({
       const userId = await ctx.db.insert("users", {
         email: args.userEmail,
         name: args.userName,
-        passwordHash: "", // WorkOS handles authentication
+        workosUserId: args.workosUserId || `temp-${Date.now()}`,
         organizationId: existingOrg._id,
         role: "owner",
         createdAt: Date.now(),
@@ -90,7 +90,7 @@ export const getOrCreateFromWorkOS = mutation({
     const userId = await ctx.db.insert("users", {
       email: args.userEmail,
       name: args.userName,
-      passwordHash: "", // WorkOS handles authentication
+      workosUserId: args.workosUserId || `temp-${Date.now()}`,
       organizationId: orgId,
       role: "owner",
       createdAt: Date.now(),
