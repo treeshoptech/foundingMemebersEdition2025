@@ -85,13 +85,13 @@ export default function EquipmentPage() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "Active":
-        return "bg-green-500/10 text-green-500"
+        return "bg-primary/10 text-primary"
       case "In Maintenance":
-        return "bg-yellow-500/10 text-yellow-500"
+        return "bg-secondary/10 text-secondary"
       case "Out of Service":
-        return "bg-red-500/10 text-red-500"
+        return "bg-destructive/10 text-destructive"
       default:
-        return "bg-gray-500/10 text-gray-500"
+        return "bg-muted text-muted-foreground"
     }
   }
 
@@ -137,10 +137,10 @@ export default function EquipmentPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Active</CardTitle>
-            <CheckCircle2 className="h-4 w-4 text-green-500" />
+            <CheckCircle2 className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-500">
+            <div className="text-2xl font-bold text-primary">
               {equipment?.filter((e) => e.status === "Active").length || 0}
             </div>
           </CardContent>
@@ -148,10 +148,10 @@ export default function EquipmentPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">In Maintenance</CardTitle>
-            <AlertCircle className="h-4 w-4 text-yellow-500" />
+            <AlertCircle className="h-4 w-4 text-accent" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-yellow-500">
+            <div className="text-2xl font-bold text-accent">
               {equipment?.filter((e) => e.status === "In Maintenance").length || 0}
             </div>
           </CardContent>

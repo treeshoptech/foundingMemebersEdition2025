@@ -28,13 +28,13 @@ export function TierBadge({ tier, showTooltip = true, size = "md" }: TierBadgePr
     return <Badge variant="outline">Tier {tier}</Badge>
   }
 
-  // Color coding by tier
+  // Color coding by tier - Blue shades with white text (TreeShop theme)
   const tierColors = {
-    1: "bg-gray-100 text-gray-800 border-gray-300",
-    2: "bg-blue-100 text-blue-800 border-blue-300",
-    3: "bg-green-100 text-green-800 border-green-300",
-    4: "bg-purple-100 text-purple-800 border-purple-300",
-    5: "bg-amber-100 text-amber-800 border-amber-300",
+    1: "bg-blue-500/20 text-white border-blue-500/50",
+    2: "bg-blue-500/40 text-white border-blue-500/70",
+    3: "bg-blue-600 text-white border-blue-600",
+    4: "bg-blue-700 text-white border-blue-700",
+    5: "bg-accent text-white border-accent", // Green accent for top tier
   }
 
   const sizeClasses = {

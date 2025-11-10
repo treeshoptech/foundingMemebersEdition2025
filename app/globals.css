@@ -3,102 +3,85 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* TreeShop Theme - Blue & White with Black Background */
 :root {
-  /* Updated theme for TreeShop - professional tree service colors */
-  --background: oklch(0.98 0.004 120);
-  --foreground: oklch(0.15 0.01 160);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.15 0.01 160);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.15 0.01 160);
+  /* Light mode (not used, but keeping for compatibility) */
+  --background: #ffffff;
+  --foreground: #000000;
+  --card: #ffffff;
+  --card-foreground: #000000;
+  --popover: #ffffff;
+  --popover-foreground: #000000;
 
-  /* Primary: Forest Green */
-  --primary: oklch(0.45 0.12 145);
-  --primary-foreground: oklch(0.98 0.004 120);
+  /* Primary: TreeShop Blue */
+  --primary: #3b82f6;
+  --primary-foreground: #ffffff;
 
-  /* Secondary: Earth Brown */
-  --secondary: oklch(0.42 0.08 50);
-  --secondary-foreground: oklch(0.98 0.004 120);
+  /* Secondary: Lighter Blue */
+  --secondary: #60a5fa;
+  --secondary-foreground: #ffffff;
 
-  --muted: oklch(0.96 0.004 120);
-  --muted-foreground: oklch(0.5 0.01 160);
-  --accent: oklch(0.95 0.006 145);
-  --accent-foreground: oklch(0.15 0.01 160);
-
-  /* Service type colors */
-  --service-mulching: oklch(0.55 0.15 145);
-  --service-stump: oklch(0.55 0.14 50);
-  --service-clearing: oklch(0.5 0.1 80);
-  --service-removal: oklch(0.5 0.15 20);
-  --service-trimming: oklch(0.55 0.18 220);
-
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.98 0.004 120);
-  --border: oklch(0.9 0.004 120);
-  --input: oklch(0.9 0.004 120);
-  --ring: oklch(0.45 0.12 145);
+  --muted: #f3f4f6;
+  --muted-foreground: #6b7280;
+  --accent: #10b981;
+  --accent-foreground: #ffffff;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --border: #e5e7eb;
+  --input: #e5e7eb;
+  --ring: #3b82f6;
   --radius: 0.75rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
 }
 
 .dark {
-  /* Dark theme optimized for field workers */
-  --background: oklch(0.12 0.01 160);
-  --foreground: oklch(0.96 0.004 120);
-  --card: oklch(0.16 0.01 160);
-  --card-foreground: oklch(0.96 0.004 120);
-  --popover: oklch(0.14 0.01 160);
-  --popover-foreground: oklch(0.96 0.004 120);
+  /* Dark mode - TreeShop Blue & White on Black */
+  --background: #000000;
+  --foreground: #ffffff;
+  --card: #0a0a0a;
+  --card-foreground: #ffffff;
+  --popover: #0a0a0a;
+  --popover-foreground: #ffffff;
 
-  /* Primary: Bright Forest Green */
-  --primary: oklch(0.6 0.16 145);
-  --primary-foreground: oklch(0.12 0.01 160);
+  /* Primary: TreeShop Blue */
+  --primary: #3b82f6;
+  --primary-foreground: #ffffff;
 
-  /* Secondary: Warm Earth */
-  --secondary: oklch(0.3 0.04 50);
-  --secondary-foreground: oklch(0.96 0.004 120);
+  /* Secondary: Lighter Blue for variety */
+  --secondary: #1e293b;
+  --secondary-foreground: #ffffff;
 
-  --muted: oklch(0.2 0.01 160);
-  --muted-foreground: oklch(0.65 0.01 160);
-  --accent: oklch(0.22 0.02 145);
-  --accent-foreground: oklch(0.96 0.004 120);
+  --muted: #1a1a1a;
+  --muted-foreground: #a3a3a3;
 
-  /* Service type colors (darker adjusted) */
-  --service-mulching: oklch(0.6 0.16 145);
-  --service-stump: oklch(0.58 0.14 50);
-  --service-clearing: oklch(0.55 0.12 80);
-  --service-removal: oklch(0.56 0.16 20);
-  --service-trimming: oklch(0.6 0.18 220);
+  /* Accent: Green for highlights only */
+  --accent: #10b981;
+  --accent-foreground: #ffffff;
 
-  --destructive: oklch(0.55 0.22 25);
-  --destructive-foreground: oklch(0.96 0.004 120);
-  --border: oklch(0.25 0.01 160);
-  --input: oklch(0.25 0.01 160);
-  --ring: oklch(0.6 0.16 145);
-  --chart-1: oklch(0.6 0.16 145);
-  --chart-2: oklch(0.58 0.14 50);
-  --chart-3: oklch(0.55 0.12 80);
-  --chart-4: oklch(0.56 0.16 20);
-  --chart-5: oklch(0.6 0.18 220);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(0.269 0 0);
-  --sidebar-ring: oklch(0.439 0 0);
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --border: #262626;
+  --input: #1a1a1a;
+  --ring: #3b82f6;
+
+  /* Chart colors - Blue shades */
+  --chart-1: #3b82f6;
+  --chart-2: #60a5fa;
+  --chart-3: #2563eb;
+  --chart-4: #1d4ed8;
+  --chart-5: #10b981;
+
+  /* Sidebar colors */
+  --sidebar: #0a0a0a;
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #3b82f6;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #1a1a1a;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #262626;
+  --sidebar-ring: #3b82f6;
 }
 
 @theme inline {
-  /* optional: --font-sans, --font-serif, --font-mono if they are applied in the layout.tsx */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);

@@ -194,7 +194,7 @@ export function TreeShopEmployeeForm({
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
               <div className="text-muted-foreground">Effective Hourly Rate</div>
-              <div className="text-lg font-semibold text-green-600">
+              <div className="text-lg font-semibold text-primary">
                 {formatCurrency(effectiveHourlyRate)}
               </div>
             </div>
@@ -204,7 +204,7 @@ export function TreeShopEmployeeForm({
             </div>
             <div>
               <div className="text-muted-foreground">True Cost Per Hour</div>
-              <div className="text-lg font-semibold text-orange-600">
+              <div className="text-lg font-semibold text-accent">
                 {formatCurrency(trueCostPerHour)}
               </div>
             </div>
@@ -372,7 +372,7 @@ export function TreeShopEmployeeForm({
               <div className="flex-1">
                 <div className="font-semibold text-sm">{addon.name}</div>
                 <div className="text-xs text-muted-foreground">{addon.description}</div>
-                <div className="text-xs font-medium text-green-600">+${addon.premium}/hour</div>
+                <div className="text-xs font-medium text-accent">+${addon.premium}/hour</div>
               </div>
             </label>
           ))}
@@ -403,7 +403,7 @@ export function TreeShopEmployeeForm({
               <div className="flex-1">
                 <div className="font-semibold text-sm">{addon.name}</div>
                 <div className="text-xs text-muted-foreground">{addon.description}</div>
-                <div className="text-xs font-medium text-green-600">+${addon.premium}/hour</div>
+                <div className="text-xs font-medium text-accent">+${addon.premium}/hour</div>
               </div>
             </label>
           ))}
@@ -433,7 +433,7 @@ export function TreeShopEmployeeForm({
               />
               <div className="flex-1">
                 <div className="font-semibold text-sm">{addon.name}</div>
-                <div className="text-xs font-medium text-green-600">+${addon.premium}/hour</div>
+                <div className="text-xs font-medium text-accent">+${addon.premium}/hour</div>
               </div>
             </label>
           ))}
