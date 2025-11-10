@@ -84,7 +84,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     <AuthContext.Provider
       value={{
         user,
-        isLoading: workosLoading || isCreatingUser || (workosUser && !convexUser && !error),
+        isLoading: Boolean(workosLoading || isCreatingUser || (workosUser && !convexUser && !error)),
         error,
         signIn: () => {},
         signOut,

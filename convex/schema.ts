@@ -173,16 +173,47 @@ export default defineSchema({
     .index("by_equipment", ["equipmentId"])
     .index("by_date", ["organizationId", "date"]),
 
-  // Employees
+  // Employees (TreeShop System)
   employees: defineTable({
     organizationId: v.id("organizations"),
     name: v.string(),
-    position: v.string(),
+
+    // TreeShop Career System
+    careerTrack: v.string(), // ATC, TRS, FOR, LCL, MUL, STG, ESR, LSC, EQO, MNT, SAL, PMC, ADM, FIN, SAF, TEC
+    tier: v.number(), // 1-5
+
+    // Base Compensation (Tier 1 rate for the career track)
     baseHourlyRate: v.number(),
-    burdenMultiplier: v.number(),
-    trueCostPerHour: v.number(),
+    burdenMultiplier: v.number(), // Default 1.7x for true business cost
+
+    // Add-Ons (all optional and stackable)
+    leadershipLevel: v.optional(v.string()), // L, S, M, D, C
+    equipmentCertifications: v.array(v.string()), // E1, E2, E3, E4
+    driverLicenses: v.array(v.string()), // D1, D2, D3, DH
+    professionalCerts: v.array(v.string()), // ISA, CRA, TRA, OSH, PES, CPR
+
+    // Cross-Training (Secondary Specialties)
+    crossTraining: v.array(
+      v.object({
+        role: v.string(),
+        tier: v.number(),
+      }),
+    ),
+
+    // Calculated Fields
+    employeeCode: v.string(), // Generated: [ROLE][TIER]+[ADD-ONS] / X-[CROSS-TRAINING]
+    effectiveHourlyRate: v.number(), // Based on tier + add-ons
+    trueCostPerHour: v.number(), // effectiveHourlyRate * burdenMultiplier
+
+    // Legacy field (kept for backward compatibility, can be used for additional notes)
+    position: v.optional(v.string()),
+
     createdAt: v.number(),
-  }).index("by_organization", ["organizationId"]),
+  })
+    .index("by_organization", ["organizationId"])
+    .index("by_career_track", ["organizationId", "careerTrack"])
+    .index("by_tier", ["organizationId", "tier"])
+    .index("by_code", ["organizationId", "employeeCode"]),
 
   // Loadouts (Equipment + Employee combinations)
   loadouts: defineTable({
