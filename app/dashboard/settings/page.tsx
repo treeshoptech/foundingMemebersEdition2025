@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react"
 import { useAuth } from "@/lib/auth-context"
+import { useOrganization } from "@/providers/organization-provider"
 import { useMutation, useQuery } from "convex/react"
 import { api } from "@/convex/_generated/api"
 import { Button } from "@/components/ui/button"
@@ -13,6 +14,8 @@ import Image from "next/image"
 
 export default function SettingsPage() {
   const { user } = useAuth()
+  const { currentOrganization } = useOrganization()
+  const canEditCompanyInfo = user?.role === "owner" || user?.role === "admin"
   const [isSaving, setIsSaving] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const [logoUrl, setLogoUrl] = useState("")
@@ -130,10 +133,10 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
+    <div className="max-w-3xl mx-auto space-y-6 px-4 sm:px-6 lg:px-8 py-6">
       <div>
-        <h1 className="text-3xl font-bold">Organization Settings</h1>
-        <p className="text-muted-foreground mt-2">Manage your company information and branding</p>
+        <h1 className="text-2xl sm:text-3xl font-bold">Organization Settings</h1>
+        <p className="text-sm sm:text-base text-muted-foreground mt-2">Manage your company information and branding</p>
       </div>
 
       <Card>
@@ -142,7 +145,11 @@ export default function SettingsPage() {
             <Building2 className="h-5 w-5" />
             Company Information
           </CardTitle>
-          <CardDescription>Update your business details and company logo</CardDescription>
+          <CardDescription>
+            {canEditCompanyInfo
+              ? "Update your business details and company logo"
+              : "Only owners and admins can update company information"}
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-2">
@@ -152,6 +159,7 @@ export default function SettingsPage() {
               value={businessName}
               onChange={(e) => setBusinessName(e.target.value)}
               placeholder="Your Tree Service Company"
+              disabled={!canEditCompanyInfo}
             />
           </div>
 
@@ -162,7 +170,11 @@ export default function SettingsPage() {
               value={businessAddress}
               onChange={(e) => setBusinessAddress(e.target.value)}
               placeholder="123 Main St, City, State 12345"
+              disabled={!canEditCompanyInfo}
             />
+            <p className="text-sm text-muted-foreground">
+              This address is used as the starting point for calculating drive times to job sites
+            </p>
           </div>
 
           <div className="space-y-2">
@@ -177,17 +189,18 @@ export default function SettingsPage() {
                     height={80}
                     className="object-contain max-h-20 mb-4"
                   />
-                  <div className="flex gap-2">
+                  <div className="flex flex-col sm:flex-row gap-2">
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
                       onClick={() => fileInputRef.current?.click()}
+                      disabled={!canEditCompanyInfo}
                     >
                       <Upload className="h-4 w-4 mr-2" />
                       Change Logo
                     </Button>
-                    <Button type="button" variant="outline" size="sm" onClick={handleRemoveLogo}>
+                    <Button type="button" variant="outline" size="sm" onClick={handleRemoveLogo} disabled={!canEditCompanyInfo}>
                       <X className="h-4 w-4 mr-2" />
                       Remove
                     </Button>
@@ -195,8 +208,8 @@ export default function SettingsPage() {
                 </div>
               ) : (
                 <div
-                  className="border-2 border-dashed rounded-lg p-8 bg-muted/30 flex flex-col items-center justify-center cursor-pointer hover:bg-muted/50 transition-colors"
-                  onClick={() => fileInputRef.current?.click()}
+                  className={`border-2 border-dashed rounded-lg p-8 bg-muted/30 flex flex-col items-center justify-center ${canEditCompanyInfo ? 'cursor-pointer hover:bg-muted/50' : 'opacity-60 cursor-not-allowed'} transition-colors`}
+                  onClick={() => canEditCompanyInfo && fileInputRef.current?.click()}
                 >
                   <ImageIcon className="h-12 w-12 text-muted-foreground mb-4" />
                   <p className="text-sm font-medium mb-1">Click to upload company logo</p>
@@ -217,26 +230,28 @@ export default function SettingsPage() {
             </p>
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t">
-            <Button variant="outline" onClick={() => window.location.reload()}>
-              Cancel
-            </Button>
-            <Button onClick={handleSave} disabled={isSaving || isUploading}>
-              {isUploading ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Uploading Logo...
-                </>
-              ) : isSaving ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                "Save Changes"
-              )}
-            </Button>
-          </div>
+          {canEditCompanyInfo && (
+            <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t">
+              <Button variant="outline" onClick={() => window.location.reload()}>
+                Cancel
+              </Button>
+              <Button onClick={handleSave} disabled={isSaving || isUploading}>
+                {isUploading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Uploading Logo...
+                  </>
+                ) : isSaving ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  "Save Changes"
+                )}
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -246,22 +261,22 @@ export default function SettingsPage() {
           <CardDescription>Your personal account details</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <Label className="text-muted-foreground">Name</Label>
-              <div className="mt-1 font-medium">{user?.name}</div>
+              <Label className="text-muted-foreground text-sm">Name</Label>
+              <div className="mt-1 font-medium break-words">{user?.name}</div>
             </div>
             <div>
-              <Label className="text-muted-foreground">Email</Label>
-              <div className="mt-1 font-medium">{user?.email}</div>
+              <Label className="text-muted-foreground text-sm">Email</Label>
+              <div className="mt-1 font-medium break-words text-sm sm:text-base">{user?.email}</div>
             </div>
             <div>
-              <Label className="text-muted-foreground">Role</Label>
+              <Label className="text-muted-foreground text-sm">Role</Label>
               <div className="mt-1 font-medium capitalize">{user?.role}</div>
             </div>
             <div>
-              <Label className="text-muted-foreground">Organization</Label>
-              <div className="mt-1 font-medium">{user?.organizationName}</div>
+              <Label className="text-muted-foreground text-sm">Organization</Label>
+              <div className="mt-1 font-medium break-words">{currentOrganization?.name || "Loading..."}</div>
             </div>
           </div>
         </CardContent>
