@@ -75,7 +75,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem("treeshop_user")
     localStorage.removeItem("treeshop_workos_session")
     // Redirect to WorkOS logout which will clean up and redirect to home
-    window.location.href = "/api/auth/workos/logout"
+    window.location.href = "/auth/logout"
   }
 
   return <AuthContext.Provider value={{ user, isLoading, signIn, signOut }}>{children}</AuthContext.Provider>

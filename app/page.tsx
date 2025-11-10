@@ -20,7 +20,7 @@ export default function Home() {
             <Link href="https://treeshop.app" target="_blank">
               <Button variant="ghost">Learn More</Button>
             </Link>
-            <Link href="/api/auth/workos/login">
+            <Link href="/auth/login">
               <Button variant="outline">Sign In</Button>
             </Link>
             <Link href="/dashboard">
