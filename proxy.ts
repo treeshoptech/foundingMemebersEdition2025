@@ -1,16 +1,13 @@
 import { authkitMiddleware } from '@workos-inc/authkit-nextjs';
 
+// Simplified middleware - let AuthKit handle everything
 export default authkitMiddleware({
   debug: true,
-  middlewareAuth: {
-    enabled: true,
-    unauthenticatedPaths: ['/', '/sign-in', '/sign-up'],
-  },
 });
 
 export const config = {
   matcher: [
-    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
-    '/(api|trpc)(.*)',
+    // Exclude static files and API routes from middleware
+    '/((?!api|_next/static|_next/image|favicon.ico).*)',
   ],
 };
