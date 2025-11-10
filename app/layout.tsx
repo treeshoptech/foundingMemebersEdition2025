@@ -4,6 +4,7 @@ import { Geist, Geist_Mono } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { ConvexClientProvider } from "@/lib/convex"
 import { AuthProvider } from "@/lib/auth-context"
+import { AuthKitProvider } from '@workos-inc/authkit-nextjs/components'
 import "./globals.css"
 
 const _geist = Geist({ subsets: ["latin"] })
@@ -40,9 +41,11 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className={`font-sans antialiased`}>
-        <ConvexClientProvider>
-          <AuthProvider>{children}</AuthProvider>
-        </ConvexClientProvider>
+        <AuthKitProvider>
+          <ConvexClientProvider>
+            <AuthProvider>{children}</AuthProvider>
+          </ConvexClientProvider>
+        </AuthKitProvider>
         <Analytics />
       </body>
     </html>
