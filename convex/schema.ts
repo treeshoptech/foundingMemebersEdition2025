@@ -18,6 +18,7 @@ export default defineSchema({
     email: v.string(),
     name: v.string(),
     workosUserId: v.optional(v.string()), // WorkOS user ID from JWT
+    passwordHash: v.optional(v.string()), // DEPRECATED - keeping for migration
     organizationId: v.id("organizations"),
     role: v.union(v.literal("owner"), v.literal("admin"), v.literal("manager"), v.literal("estimator")),
     createdAt: v.number(),
