@@ -9,15 +9,12 @@ import type { Id } from "@/convex/_generated/dataModel"
 interface Organization {
   _id: Id<"organizations">
   name: string
-  address?: string
-  city?: string
-  state?: string
-  zipCode?: string
-  phone?: string
-  email?: string
-  website?: string
-  logo?: string
-  _creationTime: number
+  businessAddress: string
+  latitude?: number
+  longitude?: number
+  workosOrgId?: string
+  logoUrl?: string
+  createdAt: number
 }
 
 interface OrganizationContextType {
@@ -28,18 +25,21 @@ interface OrganizationContextType {
 const OrganizationContext = createContext<OrganizationContextType | undefined>(undefined)
 
 export function OrganizationProvider({ children }: { children: React.ReactNode }) {
-  const { user } = useAuth()
+  const { user, isLoading: authLoading } = useAuth()
 
+  // Fetch organization details using the organizationId from the user
   const organization = useQuery(
     api.organizations.get,
-    user?.organizationId ? { id: user.organizationId as Id<"organizations"> } : "skip"
+    user?.organizationId ? { organizationId: user.organizationId as Id<"organizations"> } : "skip"
   )
+
+  const isLoading = authLoading || (!!user && organization === undefined)
 
   return (
     <OrganizationContext.Provider
       value={{
         currentOrganization: organization || null,
-        isLoading: user !== null && organization === undefined,
+        isLoading,
       }}
     >
       {children}
