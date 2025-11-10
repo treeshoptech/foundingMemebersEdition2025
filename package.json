@@ -23,6 +23,7 @@
     "@radix-ui/react-select": "latest",
     "@radix-ui/react-separator": "latest",
     "@radix-ui/react-slot": "latest",
+    "@radix-ui/react-tabs": "^1.1.13",
     "@radix-ui/react-tooltip": "^1.2.8",
     "@vercel/analytics": "latest",
     "@workos-inc/authkit-nextjs": "^2.11.0",
