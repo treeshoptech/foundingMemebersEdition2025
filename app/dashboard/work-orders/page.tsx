@@ -1,267 +1,360 @@
 "use client"
 
 import { useState } from "react"
+import { useAuth } from "@/lib/auth-context"
+import { useQuery, useMutation } from "convex/react"
+import { api } from "@/convex/_generated/api"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import {
-  Box,
-  Paper,
-  Typography,
-  Button,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import {
   Table,
   TableBody,
   TableCell,
-  TableContainer,
   TableHead,
+  TableHeader,
   TableRow,
-  Chip,
-  IconButton,
+} from "@/components/ui/table"
+import {
   Dialog,
-  DialogTitle,
   DialogContent,
-  DialogActions,
-  TextField,
-  MenuItem,
-  Stack,
-} from "@mui/material"
-import { Add, Edit, Delete, CalendarToday, Assignment } from "@mui/icons-material"
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Badge } from "@/components/ui/badge"
+import {
+  ClipboardList,
+  Calendar,
+  Edit,
+  Trash2,
+  Plus,
+  DollarSign,
+  Users,
+} from "lucide-react"
+import { Textarea } from "@/components/ui/textarea"
 
-const mockWorkOrders = [
-  {
-    _id: "1",
-    workOrderNumber: "WO-2024-001",
-    proposalId: "1",
-    customerName: "John Smith",
-    serviceType: "Tree Removal",
-    scheduledDate: "2024-01-15",
-    status: "scheduled",
-    assignedCrew: "Crew A",
-    totalAmount: 2500,
-    notes: "Large oak tree removal",
-  },
-  {
-    _id: "2",
-    workOrderNumber: "WO-2024-002",
-    proposalId: "2",
-    customerName: "Sarah Johnson",
-    serviceType: "Land Clearing",
-    scheduledDate: "2024-01-16",
-    status: "in_progress",
-    assignedCrew: "Crew B",
-    totalAmount: 8500,
-    notes: "2 acres clearing project",
-  },
-  {
-    _id: "3",
-    workOrderNumber: "WO-2024-003",
-    proposalId: "3",
-    customerName: "Mike Davis",
-    serviceType: "Stump Grinding",
-    scheduledDate: "2024-01-14",
-    status: "completed",
-    assignedCrew: "Crew A",
-    totalAmount: 450,
-    notes: "5 stumps ground",
-  },
+const STATUS_COLORS = {
+  scheduled: "default",
+  "in-progress": "secondary",
+  completed: "default",
+  cancelled: "destructive",
+} as const
+
+const SERVICE_OPTIONS = [
+  "Forestry Mulching",
+  "Stump Grinding",
+  "Land Clearing",
+  "Tree Removal",
+  "Tree Trimming",
 ]
 
-const statusColors: Record<string, "default" | "primary" | "success" | "warning" | "error"> = {
-  scheduled: "primary",
-  in_progress: "warning",
-  completed: "success",
-  cancelled: "error",
-}
-
 export default function WorkOrdersPage() {
-  const [workOrders, setWorkOrders] = useState(mockWorkOrders)
-  const [openDialog, setOpenDialog] = useState(false)
+  const { user } = useAuth()
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingWorkOrder, setEditingWorkOrder] = useState<any>(null)
+
   const [formData, setFormData] = useState({
-    workOrderNumber: "",
     customerName: "",
+    propertyAddress: "",
     serviceType: "",
     scheduledDate: "",
     status: "scheduled",
-    assignedCrew: "",
-    totalAmount: 0,
+    assignedEmployeeIds: [] as string[],
+    assignedEquipmentIds: [] as string[],
+    estimatedHours: "",
     notes: "",
   })
+
+  const workOrders = useQuery(
+    api.workOrders.list,
+    user?.organizationId ? { organizationId: user.organizationId as any } : "skip"
+  )
+
+  const employees = useQuery(
+    api.employees.list,
+    user?.organizationId ? { organizationId: user.organizationId as any } : "skip"
+  )
+
+  const equipment = useQuery(
+    api.equipment.list,
+    user?.organizationId ? { organizationId: user.organizationId as any } : "skip"
+  )
+
+  const createWorkOrder = useMutation(api.workOrders.create)
+  const updateWorkOrder = useMutation(api.workOrders.update)
+  const deleteWorkOrder = useMutation(api.workOrders.remove)
 
   const handleOpenDialog = (workOrder?: any) => {
     if (workOrder) {
       setEditingWorkOrder(workOrder)
-      setFormData(workOrder)
+      setFormData({
+        customerName: workOrder.customerName,
+        propertyAddress: workOrder.propertyAddress,
+        serviceType: workOrder.serviceType,
+        scheduledDate: workOrder.scheduledDate ? new Date(workOrder.scheduledDate).toISOString().split('T')[0] : "",
+        status: workOrder.status,
+        assignedEmployeeIds: workOrder.assignedEmployeeIds || [],
+        assignedEquipmentIds: workOrder.assignedEquipmentIds || [],
+        estimatedHours: workOrder.estimatedHours?.toString() || "",
+        notes: workOrder.notes || "",
+      })
     } else {
       setEditingWorkOrder(null)
       setFormData({
-        workOrderNumber: `WO-${new Date().getFullYear()}-${String(workOrders.length + 1).padStart(3, "0")}`,
         customerName: "",
+        propertyAddress: "",
         serviceType: "",
         scheduledDate: "",
         status: "scheduled",
-        assignedCrew: "",
-        totalAmount: 0,
+        assignedEmployeeIds: [],
+        assignedEquipmentIds: [],
+        estimatedHours: "",
         notes: "",
       })
     }
-    setOpenDialog(true)
+    setIsDialogOpen(true)
   }
 
-  const handleCloseDialog = () => {
-    setOpenDialog(false)
-    setEditingWorkOrder(null)
-  }
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
 
-  const handleSubmit = () => {
-    if (editingWorkOrder) {
-      setWorkOrders(workOrders.map((wo) => (wo._id === editingWorkOrder._id ? { ...wo, ...formData } : wo)))
-    } else {
-      setWorkOrders([...workOrders, { _id: Date.now().toString(), ...formData }])
+    if (!user?.organizationId) return
+
+    try {
+      const workOrderData = {
+        organizationId: user.organizationId as any,
+        customerName: formData.customerName,
+        propertyAddress: formData.propertyAddress,
+        serviceType: formData.serviceType,
+        scheduledDate: formData.scheduledDate ? new Date(formData.scheduledDate).getTime() : undefined,
+        status: formData.status as any,
+        assignedEmployeeIds: formData.assignedEmployeeIds as any,
+        assignedEquipmentIds: formData.assignedEquipmentIds as any,
+        estimatedHours: formData.estimatedHours ? parseFloat(formData.estimatedHours) : 0,
+        notes: formData.notes || undefined,
+      }
+
+      if (editingWorkOrder) {
+        await updateWorkOrder({
+          workOrderId: editingWorkOrder._id,
+          ...workOrderData,
+        })
+      } else {
+        await createWorkOrder(workOrderData)
+      }
+
+      setIsDialogOpen(false)
+      setEditingWorkOrder(null)
+    } catch (error) {
+      console.error("Failed to save work order:", error)
     }
-    handleCloseDialog()
   }
 
-  const handleDelete = (id: string) => {
-    setWorkOrders(workOrders.filter((wo) => wo._id !== id))
+  const handleDelete = async (workOrderId: string) => {
+    if (confirm("Are you sure you want to delete this work order?")) {
+      await deleteWorkOrder({ workOrderId: workOrderId as any })
+    }
   }
 
   return (
-    <Box>
-      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
-        <Typography variant="h4" sx={{ fontWeight: 700 }}>
-          Work Orders
-        </Typography>
-        <Button variant="contained" startIcon={<Add />} onClick={() => handleOpenDialog()}>
-          Create Work Order
-        </Button>
-      </Box>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Work Orders</h1>
+          <p className="text-muted-foreground mt-2">Schedule and track active jobs</p>
+        </div>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogTrigger asChild>
+            <Button onClick={() => handleOpenDialog()}>
+              <Plus className="h-4 w-4 mr-2" />
+              Create Work Order
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>{editingWorkOrder ? "Edit Work Order" : "Create Work Order"}</DialogTitle>
+              <DialogDescription>
+                {editingWorkOrder ? "Update work order details" : "Schedule a new job"}
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="customerName">Customer Name *</Label>
+                <Input
+                  id="customerName"
+                  value={formData.customerName}
+                  onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
+                  required
+                />
+              </div>
 
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Work Order #</TableCell>
-              <TableCell>Customer</TableCell>
-              <TableCell>Service Type</TableCell>
-              <TableCell>Scheduled Date</TableCell>
-              <TableCell>Assigned Crew</TableCell>
-              <TableCell>Amount</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell>Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {workOrders.map((workOrder) => (
-              <TableRow key={workOrder._id}>
-                <TableCell>
-                  <Typography variant="body2" sx={{ fontWeight: 600, display: "flex", alignItems: "center", gap: 0.5 }}>
-                    <Assignment sx={{ fontSize: 16 }} />
-                    {workOrder.workOrderNumber}
-                  </Typography>
-                </TableCell>
-                <TableCell>{workOrder.customerName}</TableCell>
-                <TableCell>{workOrder.serviceType}</TableCell>
-                <TableCell>
-                  <Typography variant="body2" sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                    <CalendarToday sx={{ fontSize: 14 }} />
-                    {new Date(workOrder.scheduledDate).toLocaleDateString()}
-                  </Typography>
-                </TableCell>
-                <TableCell>{workOrder.assignedCrew}</TableCell>
-                <TableCell>${workOrder.totalAmount.toLocaleString()}</TableCell>
-                <TableCell>
-                  <Chip
-                    label={workOrder.status.replace("_", " ")}
-                    size="small"
-                    color={statusColors[workOrder.status]}
+              <div className="space-y-2">
+                <Label htmlFor="propertyAddress">Property Address *</Label>
+                <Input
+                  id="propertyAddress"
+                  value={formData.propertyAddress}
+                  onChange={(e) => setFormData({ ...formData, propertyAddress: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="serviceType">Service Type *</Label>
+                  <Select
+                    value={formData.serviceType}
+                    onValueChange={(value) => setFormData({ ...formData, serviceType: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select service" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {SERVICE_OPTIONS.map((service) => (
+                        <SelectItem key={service} value={service}>
+                          {service}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="scheduledDate">Scheduled Date</Label>
+                  <Input
+                    id="scheduledDate"
+                    type="date"
+                    value={formData.scheduledDate}
+                    onChange={(e) => setFormData({ ...formData, scheduledDate: e.target.value })}
                   />
-                </TableCell>
-                <TableCell>
-                  <IconButton size="small" onClick={() => handleOpenDialog(workOrder)}>
-                    <Edit fontSize="small" />
-                  </IconButton>
-                  <IconButton size="small" onClick={() => handleDelete(workOrder._id)} color="error">
-                    <Delete fontSize="small" />
-                  </IconButton>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+                </div>
+              </div>
 
-      <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="md" fullWidth>
-        <DialogTitle>{editingWorkOrder ? "Edit Work Order" : "Create Work Order"}</DialogTitle>
-        <DialogContent>
-          <Stack spacing={2} sx={{ mt: 1 }}>
-            <TextField label="Work Order Number" fullWidth value={formData.workOrderNumber} disabled />
-            <TextField
-              label="Customer Name"
-              fullWidth
-              value={formData.customerName}
-              onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
-            />
-            <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
-              <TextField
-                select
-                label="Service Type"
-                value={formData.serviceType}
-                onChange={(e) => setFormData({ ...formData, serviceType: e.target.value })}
-              >
-                <MenuItem value="Mulching">Mulching</MenuItem>
-                <MenuItem value="Stump Grinding">Stump Grinding</MenuItem>
-                <MenuItem value="Land Clearing">Land Clearing</MenuItem>
-                <MenuItem value="Tree Removal">Tree Removal</MenuItem>
-                <MenuItem value="Tree Trimming">Tree Trimming</MenuItem>
-              </TextField>
-              <TextField
-                label="Scheduled Date"
-                type="date"
-                InputLabelProps={{ shrink: true }}
-                value={formData.scheduledDate}
-                onChange={(e) => setFormData({ ...formData, scheduledDate: e.target.value })}
-              />
-            </Box>
-            <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
-              <TextField
-                select
-                label="Status"
-                value={formData.status}
-                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-              >
-                <MenuItem value="scheduled">Scheduled</MenuItem>
-                <MenuItem value="in_progress">In Progress</MenuItem>
-                <MenuItem value="completed">Completed</MenuItem>
-                <MenuItem value="cancelled">Cancelled</MenuItem>
-              </TextField>
-              <TextField
-                label="Assigned Crew"
-                value={formData.assignedCrew}
-                onChange={(e) => setFormData({ ...formData, assignedCrew: e.target.value })}
-              />
-            </Box>
-            <TextField
-              label="Total Amount"
-              type="number"
-              fullWidth
-              value={formData.totalAmount}
-              onChange={(e) => setFormData({ ...formData, totalAmount: Number.parseFloat(e.target.value) })}
-            />
-            <TextField
-              label="Notes"
-              multiline
-              rows={3}
-              fullWidth
-              value={formData.notes}
-              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-            />
-          </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog}>Cancel</Button>
-          <Button variant="contained" onClick={handleSubmit}>
-            {editingWorkOrder ? "Save" : "Create"}
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="status">Status</Label>
+                  <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="scheduled">Scheduled</SelectItem>
+                      <SelectItem value="in-progress">In Progress</SelectItem>
+                      <SelectItem value="completed">Completed</SelectItem>
+                      <SelectItem value="cancelled">Cancelled</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="estimatedHours">Estimated Hours</Label>
+                  <Input
+                    id="estimatedHours"
+                    type="number"
+                    step="0.1"
+                    value={formData.estimatedHours}
+                    onChange={(e) => setFormData({ ...formData, estimatedHours: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="notes">Notes</Label>
+                <Textarea
+                  id="notes"
+                  rows={3}
+                  value={formData.notes}
+                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                />
+              </div>
+
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit">{editingWorkOrder ? "Save Changes" : "Create"}</Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <ClipboardList className="h-5 w-5" />
+            Active Work Orders
+          </CardTitle>
+          <CardDescription>Manage scheduled and ongoing jobs</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {!workOrders || workOrders.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              <ClipboardList className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p className="text-lg font-medium">No work orders yet</p>
+              <p className="text-sm mt-2">Create your first work order to get started</p>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Customer</TableHead>
+                  <TableHead>Service</TableHead>
+                  <TableHead>Scheduled</TableHead>
+                  <TableHead>Hours</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {workOrders.map((wo) => (
+                  <TableRow key={wo._id}>
+                    <TableCell>
+                      <div>
+                        <div className="font-medium">{wo.customerName}</div>
+                        <div className="text-sm text-muted-foreground">{wo.propertyAddress}</div>
+                      </div>
+                    </TableCell>
+                    <TableCell>{wo.serviceType}</TableCell>
+                    <TableCell>
+                      {wo.scheduledDate && (
+                        <div className="flex items-center gap-1 text-sm">
+                          <Calendar className="h-3 w-3" />
+                          {new Date(wo.scheduledDate).toLocaleDateString()}
+                        </div>
+                      )}
+                    </TableCell>
+                    <TableCell>{wo.estimatedHours} hrs</TableCell>
+                    <TableCell>
+                      <Badge variant={STATUS_COLORS[wo.status as keyof typeof STATUS_COLORS] || "default"}>
+                        {wo.status.replace("-", " ")}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(wo)}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => handleDelete(wo._id)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   )
 }

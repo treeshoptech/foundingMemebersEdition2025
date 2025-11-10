@@ -3,10 +3,14 @@ import { mutation, query } from "./_generated/server"
 
 // Get all invoices for organization
 export const list = query({
-  args: {},
-  handler: async (ctx) => {
-    // TODO: Get organizationId from auth context
-    const invoices = await ctx.db.query("invoices").collect()
+  args: {
+    organizationId: v.id("organizations"),
+  },
+  handler: async (ctx, args) => {
+    const invoices = await ctx.db
+      .query("invoices")
+      .withIndex("by_organization", (q) => q.eq("organizationId", args.organizationId))
+      .collect()
     return invoices
   },
 })
@@ -14,14 +18,18 @@ export const list = query({
 // Create a new invoice
 export const create = mutation({
   args: {
+    organizationId: v.id("organizations"),
     proposalId: v.optional(v.id("proposals")),
     workOrderId: v.optional(v.id("workOrders")),
     invoiceNumber: v.string(),
     customerName: v.string(),
     customerEmail: v.optional(v.string()),
     propertyAddress: v.string(),
+    status: v.optional(v.union(v.literal("draft"), v.literal("sent"), v.literal("paid"), v.literal("overdue"), v.literal("cancelled"))),
     subtotal: v.number(),
     taxRate: v.number(),
+    taxAmount: v.number(),
+    total: v.number(),
     lineItems: v.array(
       v.object({
         description: v.string(),
@@ -34,25 +42,19 @@ export const create = mutation({
     notes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    // TODO: Get organizationId from auth context
-    const organizationId = "temp_org_id" as any
-
-    const taxAmount = args.subtotal * (args.taxRate / 100)
-    const total = args.subtotal + taxAmount
-
     const invoiceId = await ctx.db.insert("invoices", {
-      organizationId,
+      organizationId: args.organizationId,
       proposalId: args.proposalId,
       workOrderId: args.workOrderId,
       invoiceNumber: args.invoiceNumber,
       customerName: args.customerName,
       customerEmail: args.customerEmail,
       propertyAddress: args.propertyAddress,
-      status: "draft",
+      status: args.status || "draft",
       subtotal: args.subtotal,
       taxRate: args.taxRate,
-      taxAmount,
-      total,
+      taxAmount: args.taxAmount,
+      total: args.total,
       lineItems: args.lineItems,
       dueDate: args.dueDate,
       notes: args.notes,
@@ -66,23 +68,33 @@ export const create = mutation({
 // Update invoice
 export const update = mutation({
   args: {
-    id: v.id("invoices"),
+    invoiceId: v.id("invoices"),
+    organizationId: v.id("organizations"),
+    invoiceNumber: v.optional(v.string()),
+    customerName: v.optional(v.string()),
+    customerEmail: v.optional(v.string()),
+    propertyAddress: v.optional(v.string()),
     status: v.optional(
       v.union(v.literal("draft"), v.literal("sent"), v.literal("paid"), v.literal("overdue"), v.literal("cancelled")),
     ),
+    subtotal: v.optional(v.number()),
+    taxRate: v.optional(v.number()),
+    taxAmount: v.optional(v.number()),
+    total: v.optional(v.number()),
+    dueDate: v.optional(v.number()),
     paidDate: v.optional(v.number()),
     notes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const { id, ...updates } = args
-    await ctx.db.patch(id, updates)
+    const { invoiceId, ...updates } = args
+    await ctx.db.patch(invoiceId, updates)
   },
 })
 
 // Delete invoice
 export const remove = mutation({
-  args: { id: v.id("invoices") },
+  args: { invoiceId: v.id("invoices") },
   handler: async (ctx, args) => {
-    await ctx.db.delete(args.id)
+    await ctx.db.delete(args.invoiceId)
   },
 })

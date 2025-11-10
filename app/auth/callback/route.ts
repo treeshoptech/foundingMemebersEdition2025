@@ -20,11 +20,22 @@ export async function GET(request: NextRequest) {
       clientId,
     })
 
+    // Get organization name from WorkOS
+    let orgName = "TreeShop User"
+    if (organizationId) {
+      try {
+        const org = await workos.organizations.getOrganization(organizationId)
+        orgName = org.name
+      } catch (error) {
+        console.error("Failed to get organization name:", error)
+      }
+    }
+
     // Create session data
     const sessionData = {
-      userId: user.id,
-      organizationId: organizationId || "", // WorkOS organization ID
-      organizationName: organizationId || "TreeShop User",
+      workosUserId: user.id,
+      workosOrganizationId: organizationId || "",
+      organizationName: orgName,
       name: `${user.firstName || ""} ${user.lastName || ""}`.trim() || user.email,
       email: user.email,
       role: "owner" as const,

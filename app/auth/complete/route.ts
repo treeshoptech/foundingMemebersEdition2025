@@ -35,13 +35,6 @@ export async function GET(request: NextRequest) {
       100% { transform: rotate(360deg); }
     }
   </style>
-  <script src="https://cdn.jsdelivr.net/npm/convex@latest/browser/convex.umd.js"></script>
-</head>
-<body>
-  <div class="loader">
-    <div class="spinner"></div>
-    <p>Setting up your account...</p>
-  </div>
   <script type="module">
     async function completeSetup() {
       try {
@@ -52,17 +45,27 @@ export async function GET(request: NextRequest) {
 
         const workosSession = JSON.parse(sessionDataStr);
 
-        // TODO: Call Convex mutation to:
-        // 1. Check if organization exists for this WorkOS org
-        // 2. Create organization if it doesn't exist
-        // 3. Get/create user record
-        // 4. Return Convex organization ID
+        // Import Convex client
+        const { ConvexHttpClient } = await import("convex/browser");
+        const client = new ConvexHttpClient("https://patient-raccoon-944.convex.cloud");
 
-        // For now, use demo organization
+        // Get or create organization in Convex
+        const result = await client.mutation(
+          "organizations:getOrCreateFromWorkOS" as any,
+          {
+            workosOrgId: workosSession.workosOrganizationId,
+            workosOrgName: workosSession.organizationName,
+            userEmail: workosSession.email,
+            userName: workosSession.name,
+          }
+        );
+
+        // Create final session with Convex IDs
         const convexSession = {
-          userId: "k57015tkwh8r3mj078n4fra2s97v4ckd",
-          organizationId: "kd74nxbz8vv2q7cv57p9chbhts7v4znm",
-          organizationName: workosSession.organizationName || "Demo Tree Service Co.",
+          userId: result.userId,
+          organizationId: result.organizationId,
+          organizationName: result.organizationName,
+          organizationLogo: result.organizationLogo,
           name: workosSession.name,
           email: workosSession.email,
           role: "owner"

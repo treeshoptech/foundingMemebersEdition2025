@@ -8,6 +8,7 @@ interface User {
   userId: string
   organizationId: string
   organizationName: string
+  organizationLogo?: string
   name: string
   email: string
   role: "owner" | "admin" | "manager" | "estimator"

@@ -8,8 +8,10 @@ export default defineSchema({
     businessAddress: v.string(),
     latitude: v.optional(v.number()),
     longitude: v.optional(v.number()),
+    workosOrgId: v.optional(v.string()), // WorkOS organization ID for mapping
+    logoUrl: v.optional(v.string()), // Company logo URL
     createdAt: v.number(),
-  }),
+  }).index("by_workos_org", ["workosOrgId"]),
 
   // Users (linked to organizations)
   users: defineTable({

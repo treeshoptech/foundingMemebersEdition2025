@@ -14,6 +14,7 @@ import type * as init from "../init.js";
 import type * as invoices from "../invoices.js";
 import type * as leads from "../leads.js";
 import type * as loadouts from "../loadouts.js";
+import type * as organizations from "../organizations.js";
 import type * as proposals from "../proposals.js";
 import type * as workOrders from "../workOrders.js";
 
@@ -38,6 +39,7 @@ declare const fullApi: ApiFromModules<{
   invoices: typeof invoices;
   leads: typeof leads;
   loadouts: typeof loadouts;
+  organizations: typeof organizations;
   proposals: typeof proposals;
   workOrders: typeof workOrders;
 }>;

@@ -17,6 +17,7 @@ import {
   UserPlus,
   ClipboardList,
   Receipt,
+  Settings,
 } from "lucide-react"
 import Link from "next/link"
 import { useState } from "react"
@@ -33,6 +34,7 @@ const navigation = [
   { name: "Employees", href: "/dashboard/employees", icon: Users },
   { name: "Loadouts", href: "/dashboard/loadouts", icon: Layers },
   { name: "Calculator", href: "/dashboard/calculator", icon: Calculator },
+  { name: "Settings", href: "/dashboard/settings", icon: Settings },
 ]
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -72,9 +74,26 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 
           {/* User Info */}
           <div className="border-t p-4 space-y-2">
-            <div className="text-sm">
-              <div className="font-medium">{user?.name}</div>
-              <div className="text-muted-foreground">{user?.organizationName}</div>
+            <div className="flex items-center gap-3 mb-3">
+              {user?.organizationLogo ? (
+                <Image
+                  src={user.organizationLogo}
+                  alt={user.organizationName}
+                  width={40}
+                  height={40}
+                  className="rounded-lg object-cover"
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <span className="text-primary font-bold text-lg">
+                    {user?.organizationName?.charAt(0) || "T"}
+                  </span>
+                </div>
+              )}
+              <div className="text-sm flex-1">
+                <div className="font-medium">{user?.name}</div>
+                <div className="text-muted-foreground text-xs truncate">{user?.organizationName}</div>
+              </div>
             </div>
             <Button variant="outline" className="w-full justify-start gap-2 bg-transparent" onClick={signOut}>
               <LogOut className="h-4 w-4" />

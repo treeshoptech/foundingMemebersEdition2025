@@ -1,277 +1,406 @@
 "use client"
 
 import { useState } from "react"
+import { useAuth } from "@/lib/auth-context"
+import { useQuery, useMutation } from "convex/react"
+import { api } from "@/convex/_generated/api"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import {
-  Box,
-  Paper,
-  Typography,
-  Button,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import {
   Table,
   TableBody,
   TableCell,
-  TableContainer,
   TableHead,
+  TableHeader,
   TableRow,
-  Chip,
-  IconButton,
+} from "@/components/ui/table"
+import {
   Dialog,
-  DialogTitle,
   DialogContent,
-  DialogActions,
-  TextField,
-  MenuItem,
-  Stack,
-} from "@mui/material"
-import { Add, Edit, Delete, AttachMoney, Receipt } from "@mui/icons-material"
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Badge } from "@/components/ui/badge"
+import {
+  Receipt,
+  Calendar,
+  Edit,
+  Trash2,
+  Plus,
+  DollarSign,
+} from "lucide-react"
+import { Textarea } from "@/components/ui/textarea"
 
-const mockInvoices = [
-  {
-    _id: "1",
-    invoiceNumber: "INV-2024-001",
-    workOrderId: "1",
-    customerName: "John Smith",
-    issueDate: "2024-01-15",
-    dueDate: "2024-01-30",
-    subtotal: 2500,
-    tax: 225,
-    total: 2725,
-    status: "sent",
-    paymentMethod: "check",
-  },
-  {
-    _id: "2",
-    invoiceNumber: "INV-2024-002",
-    workOrderId: "2",
-    customerName: "Sarah Johnson",
-    issueDate: "2024-01-16",
-    dueDate: "2024-01-31",
-    subtotal: 8500,
-    tax: 765,
-    total: 9265,
-    status: "paid",
-    paymentMethod: "card",
-  },
-  {
-    _id: "3",
-    invoiceNumber: "INV-2024-003",
-    workOrderId: "3",
-    customerName: "Mike Davis",
-    issueDate: "2024-01-14",
-    dueDate: "2024-01-29",
-    subtotal: 450,
-    tax: 40.5,
-    total: 490.5,
-    status: "overdue",
-    paymentMethod: null,
-  },
-]
-
-const statusColors: Record<string, "default" | "primary" | "success" | "warning" | "error"> = {
-  draft: "default",
-  sent: "primary",
-  paid: "success",
-  overdue: "error",
-  cancelled: "error",
-}
+const STATUS_COLORS = {
+  draft: "secondary",
+  sent: "default",
+  paid: "default",
+  overdue: "destructive",
+  cancelled: "destructive",
+} as const
 
 export default function InvoicesPage() {
-  const [invoices, setInvoices] = useState(mockInvoices)
-  const [openDialog, setOpenDialog] = useState(false)
+  const { user } = useAuth()
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingInvoice, setEditingInvoice] = useState<any>(null)
+
   const [formData, setFormData] = useState({
-    invoiceNumber: "",
     customerName: "",
-    issueDate: "",
+    customerEmail: "",
+    propertyAddress: "",
     dueDate: "",
-    subtotal: 0,
-    tax: 0,
-    total: 0,
+    subtotal: "",
+    taxRate: "0.09",
     status: "draft",
-    paymentMethod: "",
+    notes: "",
   })
+
+  const invoices = useQuery(
+    api.invoices.list,
+    user?.organizationId ? { organizationId: user.organizationId as any } : "skip"
+  )
+
+  const createInvoice = useMutation(api.invoices.create)
+  const updateInvoice = useMutation(api.invoices.update)
+  const deleteInvoice = useMutation(api.invoices.remove)
+
+  const calculateTax = (subtotal: number, taxRate: number) => {
+    return subtotal * taxRate
+  }
+
+  const calculateTotal = (subtotal: number, taxRate: number) => {
+    return subtotal + calculateTax(subtotal, taxRate)
+  }
 
   const handleOpenDialog = (invoice?: any) => {
     if (invoice) {
       setEditingInvoice(invoice)
-      setFormData(invoice)
+      setFormData({
+        customerName: invoice.customerName,
+        customerEmail: invoice.customerEmail || "",
+        propertyAddress: invoice.propertyAddress,
+        dueDate: invoice.dueDate ? new Date(invoice.dueDate).toISOString().split('T')[0] : "",
+        subtotal: invoice.subtotal?.toString() || "",
+        taxRate: invoice.taxRate?.toString() || "0.09",
+        status: invoice.status,
+        notes: invoice.notes || "",
+      })
     } else {
       setEditingInvoice(null)
-      const today = new Date().toISOString().split("T")[0]
-      const dueDate = new Date()
-      dueDate.setDate(dueDate.getDate() + 15)
+      // Set default due date to 15 days from now
+      const defaultDueDate = new Date()
+      defaultDueDate.setDate(defaultDueDate.getDate() + 15)
+
       setFormData({
-        invoiceNumber: `INV-${new Date().getFullYear()}-${String(invoices.length + 1).padStart(3, "0")}`,
         customerName: "",
-        issueDate: today,
-        dueDate: dueDate.toISOString().split("T")[0],
-        subtotal: 0,
-        tax: 0,
-        total: 0,
+        customerEmail: "",
+        propertyAddress: "",
+        dueDate: defaultDueDate.toISOString().split('T')[0],
+        subtotal: "",
+        taxRate: "0.09",
         status: "draft",
-        paymentMethod: "",
+        notes: "",
       })
     }
-    setOpenDialog(true)
+    setIsDialogOpen(true)
   }
 
-  const handleCloseDialog = () => {
-    setOpenDialog(false)
-    setEditingInvoice(null)
-  }
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
 
-  const handleSubtotalChange = (subtotal: number) => {
-    const tax = subtotal * 0.09 // 9% tax rate
-    const total = subtotal + tax
-    setFormData({ ...formData, subtotal, tax, total })
-  }
+    if (!user?.organizationId) return
 
-  const handleSubmit = () => {
-    if (editingInvoice) {
-      setInvoices(invoices.map((inv) => (inv._id === editingInvoice._id ? { ...inv, ...formData } : inv)))
-    } else {
-      setInvoices([...invoices, { _id: Date.now().toString(), ...formData }])
+    try {
+      const subtotal = parseFloat(formData.subtotal) || 0
+      const taxRate = parseFloat(formData.taxRate) || 0
+      const tax = calculateTax(subtotal, taxRate)
+      const total = calculateTotal(subtotal, taxRate)
+
+      // Generate invoice number
+      const invoiceNumber = `INV-${new Date().getFullYear()}-${String((invoices?.length || 0) + 1).padStart(3, '0')}`
+
+      const invoiceData = {
+        organizationId: user.organizationId as any,
+        invoiceNumber,
+        customerName: formData.customerName,
+        customerEmail: formData.customerEmail || undefined,
+        propertyAddress: formData.propertyAddress,
+        status: formData.status as any,
+        subtotal,
+        taxRate,
+        taxAmount: tax,
+        total,
+        lineItems: [],
+        dueDate: formData.dueDate ? new Date(formData.dueDate).getTime() : new Date().getTime() + (15 * 24 * 60 * 60 * 1000),
+        notes: formData.notes || undefined,
+      }
+
+      if (editingInvoice) {
+        await updateInvoice({
+          invoiceId: editingInvoice._id,
+          ...invoiceData,
+        })
+      } else {
+        await createInvoice(invoiceData)
+      }
+
+      setIsDialogOpen(false)
+      setEditingInvoice(null)
+    } catch (error) {
+      console.error("Failed to save invoice:", error)
     }
-    handleCloseDialog()
   }
 
-  const handleDelete = (id: string) => {
-    setInvoices(invoices.filter((inv) => inv._id !== id))
+  const handleDelete = async (invoiceId: string) => {
+    if (confirm("Are you sure you want to delete this invoice?")) {
+      await deleteInvoice({ invoiceId: invoiceId as any })
+    }
   }
+
+  const subtotal = parseFloat(formData.subtotal) || 0
+  const taxRate = parseFloat(formData.taxRate) || 0
+  const tax = calculateTax(subtotal, taxRate)
+  const total = calculateTotal(subtotal, taxRate)
 
   return (
-    <Box>
-      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
-        <Typography variant="h4" sx={{ fontWeight: 700 }}>
-          Invoices
-        </Typography>
-        <Button variant="contained" startIcon={<Add />} onClick={() => handleOpenDialog()}>
-          Create Invoice
-        </Button>
-      </Box>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Invoices</h1>
+          <p className="text-muted-foreground mt-2">Create and track customer invoices</p>
+        </div>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogTrigger asChild>
+            <Button onClick={() => handleOpenDialog()}>
+              <Plus className="h-4 w-4 mr-2" />
+              Create Invoice
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>{editingInvoice ? "Edit Invoice" : "Create Invoice"}</DialogTitle>
+              <DialogDescription>
+                {editingInvoice ? "Update invoice details" : "Generate a new customer invoice"}
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="customerName">Customer Name *</Label>
+                <Input
+                  id="customerName"
+                  value={formData.customerName}
+                  onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
+                  required
+                />
+              </div>
 
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Invoice #</TableCell>
-              <TableCell>Customer</TableCell>
-              <TableCell>Issue Date</TableCell>
-              <TableCell>Due Date</TableCell>
-              <TableCell>Subtotal</TableCell>
-              <TableCell>Tax</TableCell>
-              <TableCell>Total</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell>Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {invoices.map((invoice) => (
-              <TableRow key={invoice._id}>
-                <TableCell>
-                  <Typography variant="body2" sx={{ fontWeight: 600, display: "flex", alignItems: "center", gap: 0.5 }}>
-                    <Receipt sx={{ fontSize: 16 }} />
-                    {invoice.invoiceNumber}
-                  </Typography>
-                </TableCell>
-                <TableCell>{invoice.customerName}</TableCell>
-                <TableCell>{new Date(invoice.issueDate).toLocaleDateString()}</TableCell>
-                <TableCell>{new Date(invoice.dueDate).toLocaleDateString()}</TableCell>
-                <TableCell>${invoice.subtotal.toLocaleString()}</TableCell>
-                <TableCell>${invoice.tax.toFixed(2)}</TableCell>
-                <TableCell>
-                  <Typography variant="body2" sx={{ fontWeight: 700, display: "flex", alignItems: "center", gap: 0.5 }}>
-                    <AttachMoney sx={{ fontSize: 16 }} />
-                    {invoice.total.toLocaleString()}
-                  </Typography>
-                </TableCell>
-                <TableCell>
-                  <Chip label={invoice.status} size="small" color={statusColors[invoice.status]} />
-                </TableCell>
-                <TableCell>
-                  <IconButton size="small" onClick={() => handleOpenDialog(invoice)}>
-                    <Edit fontSize="small" />
-                  </IconButton>
-                  <IconButton size="small" onClick={() => handleDelete(invoice._id)} color="error">
-                    <Delete fontSize="small" />
-                  </IconButton>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="customerEmail">Customer Email</Label>
+                  <Input
+                    id="customerEmail"
+                    type="email"
+                    value={formData.customerEmail}
+                    onChange={(e) => setFormData({ ...formData, customerEmail: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="dueDate">Due Date *</Label>
+                  <Input
+                    id="dueDate"
+                    type="date"
+                    value={formData.dueDate}
+                    onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
+                    required
+                  />
+                </div>
+              </div>
 
-      <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="md" fullWidth>
-        <DialogTitle>{editingInvoice ? "Edit Invoice" : "Create Invoice"}</DialogTitle>
-        <DialogContent>
-          <Stack spacing={2} sx={{ mt: 1 }}>
-            <TextField label="Invoice Number" fullWidth value={formData.invoiceNumber} disabled />
-            <TextField
-              label="Customer Name"
-              fullWidth
-              value={formData.customerName}
-              onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
-            />
-            <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
-              <TextField
-                label="Issue Date"
-                type="date"
-                InputLabelProps={{ shrink: true }}
-                value={formData.issueDate}
-                onChange={(e) => setFormData({ ...formData, issueDate: e.target.value })}
-              />
-              <TextField
-                label="Due Date"
-                type="date"
-                InputLabelProps={{ shrink: true }}
-                value={formData.dueDate}
-                onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
-              />
-            </Box>
-            <TextField
-              label="Subtotal"
-              type="number"
-              fullWidth
-              value={formData.subtotal}
-              onChange={(e) => handleSubtotalChange(Number.parseFloat(e.target.value))}
-            />
-            <TextField label="Tax (9%)" type="number" fullWidth value={formData.tax.toFixed(2)} disabled />
-            <TextField label="Total" type="number" fullWidth value={formData.total.toFixed(2)} disabled />
-            <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
-              <TextField
-                select
-                label="Status"
-                value={formData.status}
-                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-              >
-                <MenuItem value="draft">Draft</MenuItem>
-                <MenuItem value="sent">Sent</MenuItem>
-                <MenuItem value="paid">Paid</MenuItem>
-                <MenuItem value="overdue">Overdue</MenuItem>
-                <MenuItem value="cancelled">Cancelled</MenuItem>
-              </TextField>
-              <TextField
-                select
-                label="Payment Method"
-                value={formData.paymentMethod}
-                onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value })}
-              >
-                <MenuItem value="">Not Paid</MenuItem>
-                <MenuItem value="cash">Cash</MenuItem>
-                <MenuItem value="check">Check</MenuItem>
-                <MenuItem value="card">Credit Card</MenuItem>
-                <MenuItem value="bank_transfer">Bank Transfer</MenuItem>
-              </TextField>
-            </Box>
-          </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog}>Cancel</Button>
-          <Button variant="contained" onClick={handleSubmit}>
-            {editingInvoice ? "Save" : "Create"}
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
+              <div className="space-y-2">
+                <Label htmlFor="propertyAddress">Property Address *</Label>
+                <Input
+                  id="propertyAddress"
+                  value={formData.propertyAddress}
+                  onChange={(e) => setFormData({ ...formData, propertyAddress: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="subtotal">Subtotal *</Label>
+                  <Input
+                    id="subtotal"
+                    type="number"
+                    step="0.01"
+                    value={formData.subtotal}
+                    onChange={(e) => setFormData({ ...formData, subtotal: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="taxRate">Tax Rate</Label>
+                  <Input
+                    id="taxRate"
+                    type="number"
+                    step="0.01"
+                    value={formData.taxRate}
+                    onChange={(e) => setFormData({ ...formData, taxRate: e.target.value })}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    {(parseFloat(formData.taxRate) * 100).toFixed(0)}% tax rate
+                  </p>
+                </div>
+              </div>
+
+              <div className="bg-muted/50 p-4 rounded-lg space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span>Subtotal:</span>
+                  <span>${subtotal.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span>Tax:</span>
+                  <span>${tax.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between font-bold text-lg border-t pt-2">
+                  <span>Total:</span>
+                  <span>${total.toFixed(2)}</span>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="status">Status</Label>
+                <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="draft">Draft</SelectItem>
+                    <SelectItem value="sent">Sent</SelectItem>
+                    <SelectItem value="paid">Paid</SelectItem>
+                    <SelectItem value="overdue">Overdue</SelectItem>
+                    <SelectItem value="cancelled">Cancelled</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="notes">Notes</Label>
+                <Textarea
+                  id="notes"
+                  rows={3}
+                  value={formData.notes}
+                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                />
+              </div>
+
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit">{editingInvoice ? "Save Changes" : "Create"}</Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Receipt className="h-5 w-5" />
+            All Invoices
+          </CardTitle>
+          <CardDescription>Track billing and payments</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {!invoices || invoices.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              <Receipt className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p className="text-lg font-medium">No invoices yet</p>
+              <p className="text-sm mt-2">Create your first invoice to get started</p>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Invoice #</TableHead>
+                  <TableHead>Customer</TableHead>
+                  <TableHead>Due Date</TableHead>
+                  <TableHead>Subtotal</TableHead>
+                  <TableHead>Tax</TableHead>
+                  <TableHead>Total</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {invoices.map((invoice) => (
+                  <TableRow key={invoice._id}>
+                    <TableCell>
+                      <div className="flex items-center gap-1 font-medium">
+                        <Receipt className="h-3 w-3" />
+                        {invoice.invoiceNumber}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div>
+                        <div className="font-medium">{invoice.customerName}</div>
+                        {invoice.customerEmail && (
+                          <div className="text-sm text-muted-foreground">{invoice.customerEmail}</div>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {invoice.dueDate && (
+                        <div className="flex items-center gap-1 text-sm">
+                          <Calendar className="h-3 w-3" />
+                          {new Date(invoice.dueDate).toLocaleDateString()}
+                        </div>
+                      )}
+                    </TableCell>
+                    <TableCell>${invoice.subtotal.toFixed(2)}</TableCell>
+                    <TableCell>${invoice.taxAmount.toFixed(2)}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1 font-bold">
+                        <DollarSign className="h-3 w-3" />
+                        {invoice.total.toFixed(2)}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={STATUS_COLORS[invoice.status as keyof typeof STATUS_COLORS] || "default"}>
+                        {invoice.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(invoice)}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => handleDelete(invoice._id)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   )
 }

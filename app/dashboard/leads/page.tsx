@@ -1,300 +1,384 @@
 "use client"
 
 import { useState } from "react"
+import { useAuth } from "@/lib/auth-context"
+import { useQuery, useMutation } from "convex/react"
+import { api } from "@/convex/_generated/api"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import {
-  Box,
-  Paper,
-  Typography,
-  Button,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import {
   Table,
   TableBody,
   TableCell,
-  TableContainer,
   TableHead,
+  TableHeader,
   TableRow,
-  Chip,
-  IconButton,
+} from "@/components/ui/table"
+import {
   Dialog,
-  DialogTitle,
   DialogContent,
-  DialogActions,
-  TextField,
-  MenuItem,
-  Stack,
-} from "@mui/material"
-import { Add, Edit, Delete, Phone, Email, LocationOn } from "@mui/icons-material"
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Badge } from "@/components/ui/badge"
+import {
+  UserPlus,
+  Phone,
+  Mail,
+  MapPin,
+  Edit,
+  Trash2,
+  Plus,
+  DollarSign,
+} from "lucide-react"
+import { Textarea } from "@/components/ui/textarea"
 
-// Mock data for demo mode
-const mockLeads = [
-  {
-    _id: "1",
-    customerName: "John Smith",
-    email: "john@example.com",
-    phone: "(555) 123-4567",
-    address: "123 Oak Street, Portland, OR",
-    status: "new",
-    source: "website",
-    serviceInterest: "Tree Removal",
-    estimatedValue: 2500,
-    notes: "Large oak tree in backyard",
-    createdAt: new Date().toISOString(),
-  },
-  {
-    _id: "2",
-    customerName: "Sarah Johnson",
-    email: "sarah@example.com",
-    phone: "(555) 234-5678",
-    address: "456 Pine Avenue, Eugene, OR",
-    status: "contacted",
-    source: "referral",
-    serviceInterest: "Land Clearing",
-    estimatedValue: 8500,
-    notes: "2 acres need clearing",
-    createdAt: new Date().toISOString(),
-  },
-  {
-    _id: "3",
-    customerName: "Mike Davis",
-    email: "mike@example.com",
-    phone: "(555) 345-6789",
-    address: "789 Maple Drive, Salem, OR",
-    status: "qualified",
-    source: "google",
-    serviceInterest: "Stump Grinding",
-    estimatedValue: 450,
-    notes: "5 stumps to grind",
-    createdAt: new Date().toISOString(),
-  },
+const STATUS_COLORS = {
+  new: "default",
+  contacted: "secondary",
+  qualified: "default",
+  proposal_sent: "secondary",
+  converted: "default",
+  lost: "destructive",
+} as const
+
+const SOURCE_OPTIONS = ["Website", "Referral", "Google", "Facebook", "Other"]
+const SERVICE_OPTIONS = [
+  "Forestry Mulching",
+  "Stump Grinding",
+  "Land Clearing",
+  "Tree Removal",
+  "Tree Trimming",
 ]
 
-const statusColors: Record<string, "default" | "primary" | "success" | "warning" | "error"> = {
-  new: "primary",
-  contacted: "warning",
-  qualified: "success",
-  proposal_sent: "info",
-  converted: "success",
-  lost: "error",
-}
-
 export default function LeadsPage() {
-  const [leads, setLeads] = useState(mockLeads)
-  const [openDialog, setOpenDialog] = useState(false)
+  const { user } = useAuth()
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingLead, setEditingLead] = useState<any>(null)
+
+  // Form state
   const [formData, setFormData] = useState({
     customerName: "",
     email: "",
-    phone: "",
-    address: "",
+    phoneNumber: "",
+    propertyAddress: "",
     status: "new",
-    source: "website",
-    serviceInterest: "",
-    estimatedValue: 0,
+    serviceType: "",
+    estimatedValue: "",
     notes: "",
   })
+
+  const leads = useQuery(
+    api.leads.list,
+    user?.organizationId ? { organizationId: user.organizationId as any } : "skip"
+  )
+
+  const createLead = useMutation(api.leads.create)
+  const updateLead = useMutation(api.leads.update)
+  const deleteLead = useMutation(api.leads.remove)
 
   const handleOpenDialog = (lead?: any) => {
     if (lead) {
       setEditingLead(lead)
-      setFormData(lead)
+      setFormData({
+        customerName: lead.customerName,
+        email: lead.email || "",
+        phoneNumber: lead.phoneNumber || "",
+        propertyAddress: lead.propertyAddress,
+        status: lead.status,
+        serviceType: lead.serviceType,
+        estimatedValue: lead.estimatedValue?.toString() || "",
+        notes: lead.notes || "",
+      })
     } else {
       setEditingLead(null)
       setFormData({
         customerName: "",
         email: "",
-        phone: "",
-        address: "",
+        phoneNumber: "",
+        propertyAddress: "",
         status: "new",
-        source: "website",
-        serviceInterest: "",
-        estimatedValue: 0,
+        serviceType: "",
+        estimatedValue: "",
         notes: "",
       })
     }
-    setOpenDialog(true)
+    setIsDialogOpen(true)
   }
 
-  const handleCloseDialog = () => {
-    setOpenDialog(false)
-    setEditingLead(null)
-  }
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
 
-  const handleSubmit = () => {
-    if (editingLead) {
-      setLeads(leads.map((l) => (l._id === editingLead._id ? { ...l, ...formData } : l)))
-    } else {
-      setLeads([...leads, { _id: Date.now().toString(), ...formData, createdAt: new Date().toISOString() }])
+    if (!user?.organizationId) return
+
+    try {
+      if (editingLead) {
+        await updateLead({
+          leadId: editingLead._id,
+          customerName: formData.customerName,
+          email: formData.email || undefined,
+          phoneNumber: formData.phoneNumber || undefined,
+          propertyAddress: formData.propertyAddress,
+          status: formData.status,
+          serviceType: formData.serviceType,
+          estimatedValue: formData.estimatedValue ? parseFloat(formData.estimatedValue) : undefined,
+          notes: formData.notes || undefined,
+        })
+      } else {
+        await createLead({
+          organizationId: user.organizationId as any,
+          customerName: formData.customerName,
+          propertyAddress: formData.propertyAddress,
+          phoneNumber: formData.phoneNumber || undefined,
+          email: formData.email || undefined,
+          serviceType: formData.serviceType,
+          status: formData.status,
+          estimatedValue: formData.estimatedValue ? parseFloat(formData.estimatedValue) : undefined,
+          notes: formData.notes || undefined,
+        })
+      }
+      setIsDialogOpen(false)
+      setEditingLead(null)
+    } catch (error) {
+      console.error("Failed to save lead:", error)
     }
-    handleCloseDialog()
   }
 
-  const handleDelete = (id: string) => {
-    setLeads(leads.filter((l) => l._id !== id))
+  const handleDelete = async (leadId: string) => {
+    if (confirm("Are you sure you want to delete this lead?")) {
+      await deleteLead({ leadId: leadId as any })
+    }
   }
 
   return (
-    <Box>
-      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
-        <Typography variant="h4" sx={{ fontWeight: 700 }}>
-          Leads
-        </Typography>
-        <Button variant="contained" startIcon={<Add />} onClick={() => handleOpenDialog()}>
-          Add Lead
-        </Button>
-      </Box>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Leads</h1>
+          <p className="text-muted-foreground mt-2">Track and manage incoming leads</p>
+        </div>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogTrigger asChild>
+            <Button onClick={() => handleOpenDialog()}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Lead
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>{editingLead ? "Edit Lead" : "Add New Lead"}</DialogTitle>
+              <DialogDescription>
+                {editingLead ? "Update lead information" : "Add a new lead to your pipeline"}
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="customerName">Customer Name *</Label>
+                <Input
+                  id="customerName"
+                  value={formData.customerName}
+                  onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
+                  required
+                />
+              </div>
 
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Customer</TableCell>
-              <TableCell>Contact</TableCell>
-              <TableCell>Service Interest</TableCell>
-              <TableCell>Est. Value</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell>Source</TableCell>
-              <TableCell>Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {leads.map((lead) => (
-              <TableRow key={lead._id}>
-                <TableCell>
-                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                    {lead.customerName}
-                  </Typography>
-                  <Typography
-                    variant="caption"
-                    sx={{ display: "flex", alignItems: "center", gap: 0.5, color: "text.secondary" }}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="phoneNumber">Phone Number</Label>
+                  <Input
+                    id="phoneNumber"
+                    value={formData.phoneNumber}
+                    onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="propertyAddress">Property Address *</Label>
+                <Input
+                  id="propertyAddress"
+                  value={formData.propertyAddress}
+                  onChange={(e) => setFormData({ ...formData, propertyAddress: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="status">Status</Label>
+                  <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="new">New</SelectItem>
+                      <SelectItem value="contacted">Contacted</SelectItem>
+                      <SelectItem value="qualified">Qualified</SelectItem>
+                      <SelectItem value="proposal_sent">Proposal Sent</SelectItem>
+                      <SelectItem value="converted">Converted</SelectItem>
+                      <SelectItem value="lost">Lost</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="serviceType">Service Interest *</Label>
+                  <Select
+                    value={formData.serviceType}
+                    onValueChange={(value) => setFormData({ ...formData, serviceType: value })}
                   >
-                    <LocationOn sx={{ fontSize: 14 }} />
-                    {lead.address}
-                  </Typography>
-                </TableCell>
-                <TableCell>
-                  <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
-                    <Typography variant="caption" sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                      <Phone sx={{ fontSize: 14 }} />
-                      {lead.phone}
-                    </Typography>
-                    <Typography variant="caption" sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                      <Email sx={{ fontSize: 14 }} />
-                      {lead.email}
-                    </Typography>
-                  </Box>
-                </TableCell>
-                <TableCell>{lead.serviceInterest}</TableCell>
-                <TableCell>${lead.estimatedValue.toLocaleString()}</TableCell>
-                <TableCell>
-                  <Chip label={lead.status.replace("_", " ")} size="small" color={statusColors[lead.status]} />
-                </TableCell>
-                <TableCell>{lead.source}</TableCell>
-                <TableCell>
-                  <IconButton size="small" onClick={() => handleOpenDialog(lead)}>
-                    <Edit fontSize="small" />
-                  </IconButton>
-                  <IconButton size="small" onClick={() => handleDelete(lead._id)} color="error">
-                    <Delete fontSize="small" />
-                  </IconButton>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select service" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {SERVICE_OPTIONS.map((service) => (
+                        <SelectItem key={service} value={service}>
+                          {service}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
 
-      <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="md" fullWidth>
-        <DialogTitle>{editingLead ? "Edit Lead" : "Add Lead"}</DialogTitle>
-        <DialogContent>
-          <Stack spacing={2} sx={{ mt: 1 }}>
-            <TextField
-              label="Customer Name"
-              fullWidth
-              value={formData.customerName}
-              onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
-            />
-            <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
-              <TextField
-                label="Email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              />
-              <TextField
-                label="Phone"
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-              />
-            </Box>
-            <TextField
-              label="Address"
-              fullWidth
-              value={formData.address}
-              onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-            />
-            <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
-              <TextField
-                select
-                label="Status"
-                value={formData.status}
-                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-              >
-                <MenuItem value="new">New</MenuItem>
-                <MenuItem value="contacted">Contacted</MenuItem>
-                <MenuItem value="qualified">Qualified</MenuItem>
-                <MenuItem value="proposal_sent">Proposal Sent</MenuItem>
-                <MenuItem value="converted">Converted</MenuItem>
-                <MenuItem value="lost">Lost</MenuItem>
-              </TextField>
-              <TextField
-                select
-                label="Source"
-                value={formData.source}
-                onChange={(e) => setFormData({ ...formData, source: e.target.value })}
-              >
-                <MenuItem value="website">Website</MenuItem>
-                <MenuItem value="referral">Referral</MenuItem>
-                <MenuItem value="google">Google</MenuItem>
-                <MenuItem value="facebook">Facebook</MenuItem>
-                <MenuItem value="other">Other</MenuItem>
-              </TextField>
-            </Box>
-            <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
-              <TextField
-                select
-                label="Service Interest"
-                value={formData.serviceInterest}
-                onChange={(e) => setFormData({ ...formData, serviceInterest: e.target.value })}
-              >
-                <MenuItem value="Mulching">Mulching</MenuItem>
-                <MenuItem value="Stump Grinding">Stump Grinding</MenuItem>
-                <MenuItem value="Land Clearing">Land Clearing</MenuItem>
-                <MenuItem value="Tree Removal">Tree Removal</MenuItem>
-                <MenuItem value="Tree Trimming">Tree Trimming</MenuItem>
-              </TextField>
-              <TextField
-                label="Estimated Value"
-                type="number"
-                value={formData.estimatedValue}
-                onChange={(e) => setFormData({ ...formData, estimatedValue: Number.parseFloat(e.target.value) })}
-              />
-            </Box>
-            <TextField
-              label="Notes"
-              multiline
-              rows={3}
-              fullWidth
-              value={formData.notes}
-              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-            />
-          </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog}>Cancel</Button>
-          <Button variant="contained" onClick={handleSubmit}>
-            {editingLead ? "Save" : "Add"}
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
+              <div className="space-y-2">
+                <Label htmlFor="estimatedValue">Estimated Value</Label>
+                <Input
+                  id="estimatedValue"
+                  type="number"
+                  step="0.01"
+                  value={formData.estimatedValue}
+                  onChange={(e) => setFormData({ ...formData, estimatedValue: e.target.value })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="notes">Notes</Label>
+                <Textarea
+                  id="notes"
+                  rows={3}
+                  value={formData.notes}
+                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                />
+              </div>
+
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit">{editingLead ? "Save Changes" : "Add Lead"}</Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <UserPlus className="h-5 w-5" />
+            Active Leads
+          </CardTitle>
+          <CardDescription>Manage your lead pipeline</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {!leads || leads.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              <UserPlus className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p className="text-lg font-medium">No leads yet</p>
+              <p className="text-sm mt-2">Add your first lead to get started</p>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Customer</TableHead>
+                  <TableHead>Contact</TableHead>
+                  <TableHead>Service</TableHead>
+                  <TableHead>Value</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {leads.map((lead) => (
+                  <TableRow key={lead._id}>
+                    <TableCell>
+                      <div>
+                        <div className="font-medium">{lead.customerName}</div>
+                        <div className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
+                          <MapPin className="h-3 w-3" />
+                          {lead.propertyAddress}
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="space-y-1">
+                        {lead.phoneNumber && (
+                          <div className="text-sm flex items-center gap-1">
+                            <Phone className="h-3 w-3" />
+                            {lead.phoneNumber}
+                          </div>
+                        )}
+                        {lead.email && (
+                          <div className="text-sm flex items-center gap-1">
+                            <Mail className="h-3 w-3" />
+                            {lead.email}
+                          </div>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>{lead.serviceType}</TableCell>
+                    <TableCell>
+                      {lead.estimatedValue && (
+                        <div className="flex items-center gap-1">
+                          <DollarSign className="h-3 w-3" />
+                          {lead.estimatedValue.toLocaleString()}
+                        </div>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={STATUS_COLORS[lead.status as keyof typeof STATUS_COLORS] || "default"}>
+                        {lead.status.replace("_", " ")}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(lead)}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => handleDelete(lead._id)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   )
 }
