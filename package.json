@@ -36,6 +36,7 @@
     "tw-animate-css": "latest"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.9",
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^22",
     "@types/react": "^19",
