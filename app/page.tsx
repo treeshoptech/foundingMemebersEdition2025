@@ -16,9 +16,9 @@ export default function Home() {
             <Image src="/logo.png" alt="TreeShop" width={120} height={40} className="object-contain" />
             <Badge variant="secondary" className="hidden sm:inline-flex">Founding Members 2025</Badge>
           </div>
-          <Link href="/auth/login">
-            <Button>Sign In</Button>
-          </Link>
+          <Button onClick={() => window.location.href = '/auth/login'}>
+            Sign In
+          </Button>
         </div>
       </header>
 
