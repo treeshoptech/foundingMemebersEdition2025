@@ -3,17 +3,17 @@
  * This provides standardized categorization for detailed inventory management
  */
 
-// Main Equipment Categories
+// Main Equipment Categories - Organized by importance/cost (heavy machinery first)
 export const EQUIPMENT_CATEGORIES = {
-  AERIAL_EQUIPMENT: "Aerial Equipment",
-  CHIPPERS: "Chippers",
+  TRUCKS: "Trucks & Vehicles",
+  AERIAL_EQUIPMENT: "Aerial Equipment (Bucket Trucks, Lifts)",
+  CHIPPERS: "Chippers & Grinders",
   STUMP_GRINDERS: "Stump Grinders",
-  TRUCKS: "Trucks",
+  GROUND_EQUIPMENT: "Heavy Ground Equipment (Skid Steers, Excavators, Mulchers)",
   TRAILERS: "Trailers",
   SAWS: "Saws & Cutting Tools",
   CLIMBING_GEAR: "Climbing Gear",
   RIGGING_EQUIPMENT: "Rigging Equipment",
-  GROUND_EQUIPMENT: "Ground Equipment",
   SAFETY_EQUIPMENT: "Safety Equipment",
   DIAGNOSTIC_TOOLS: "Diagnostic Tools",
   SPRAY_EQUIPMENT: "Spray Equipment",
