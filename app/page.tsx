@@ -46,7 +46,7 @@ export default function Home() {
                   <Button
                     variant="link"
                     className="px-1 h-auto text-[10px] sm:text-xs"
-                    onClick={() => window.open('mailto:founders@treeshop.app?subject=Founding Member Application', '_blank')}
+                    onClick={() => window.open('https://www.treeshop.app/tech#application', '_blank')}
                   >
                     Apply here
                   </Button>
@@ -59,24 +59,35 @@ export default function Home() {
           <Card className="border-muted h-full">
             <CardHeader className="text-center space-y-3 sm:space-y-4 pt-6 sm:pt-12 pb-4 sm:pb-8">
               <CardTitle className="text-2xl sm:text-4xl leading-tight">
-                Stop Guessing.
+                The First-Ever System
                 <br />
-                <span className="text-primary">Start Profiting.</span>
+                <span className="text-primary">To Make Pricing This Simple.</span>
               </CardTitle>
-              <CardDescription className="text-sm sm:text-lg">
-                The first scientifically-backed pricing system for tree service professionals
+              <CardDescription className="text-sm sm:text-lg font-medium">
+                Revolutionary scientific pricing that transforms how tree service companies operate
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4 sm:space-y-6 pb-6 sm:pb-12 px-4 sm:px-6">
               <div className="space-y-3 sm:space-y-4">
                 <div className="flex items-start gap-2 sm:gap-3">
                   <div className="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-sm sm:text-base mb-0.5 sm:mb-1">World's First TreeShop Score™ System</h4>
+                    <p className="text-xs sm:text-sm text-muted-foreground">
+                      80+ complexity factors. Every job calculated with scientific precision. Never guess again.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-2 sm:gap-3">
+                  <div className="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary/10 flex items-center justify-center">
                     <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-sm sm:text-base mb-0.5 sm:mb-1">Work 1-on-1 With Me</h4>
+                    <h4 className="font-semibold text-sm sm:text-base mb-0.5 sm:mb-1">Direct Partnership With Founder</h4>
                     <p className="text-xs sm:text-sm text-muted-foreground">
-                      Direct access to build your business together
+                      1-on-1 access to build your empire. Personal guidance from someone who actually gets it.
                     </p>
                   </div>
                 </div>
@@ -85,27 +96,16 @@ export default function Home() {
                     <Users className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-sm sm:text-base mb-0.5 sm:mb-1">Exclusive Marketing</h4>
+                    <h4 className="font-semibold text-sm sm:text-base mb-0.5 sm:mb-1">Founding Member Exclusivity</h4>
                     <p className="text-xs sm:text-sm text-muted-foreground">
-                      Special opportunities as TreeShop scales
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-2 sm:gap-3">
-                  <div className="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                    <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-sm sm:text-base mb-0.5 sm:mb-1">Founding Member Benefits</h4>
-                    <p className="text-xs sm:text-sm text-muted-foreground">
-                      Scientific pricing + complete business management
+                      Shape the platform. Priority features. VIP marketing as TreeShop explodes nationwide.
                     </p>
                   </div>
                 </div>
               </div>
               <div className="pt-2 sm:pt-4 text-center">
-                <p className="text-base sm:text-lg font-semibold text-primary mb-1 sm:mb-2">Invitation Only</p>
-                <p className="text-[10px] sm:text-xs text-muted-foreground">Business owners may apply for membership</p>
+                <p className="text-base sm:text-lg font-bold text-primary mb-1 sm:mb-2">🔒 Invitation Only</p>
+                <p className="text-[10px] sm:text-xs text-muted-foreground">Limited to serious tree service companies ready to dominate</p>
               </div>
             </CardContent>
           </Card>
