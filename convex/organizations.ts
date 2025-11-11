@@ -122,6 +122,7 @@ export const update = mutation({
     businessAddress: v.optional(v.string()),
     latitude: v.optional(v.number()),
     longitude: v.optional(v.number()),
+    depositPercentage: v.optional(v.number()),
     logoUrl: v.optional(v.string()),
   },
   handler: async (ctx, args) => {

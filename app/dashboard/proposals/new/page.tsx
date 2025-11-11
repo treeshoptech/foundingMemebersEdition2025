@@ -1,8 +1,10 @@
 "use client"
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useState, useEffect } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
+import { useQuery, useMutation } from "convex/react"
+import { api } from "@/convex/_generated/api"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -17,16 +19,29 @@ import Link from "next/link"
 
 export default function NewProposalPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { user } = useAuth()
   const [isCalculatorOpen, setIsCalculatorOpen] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
 
-  const [customerName, setCustomerName] = useState("")
-  const [propertyAddress, setPropertyAddress] = useState("")
+  // Get lead data from query params
+  const leadId = searchParams.get("leadId")
+  const leadCustomerName = searchParams.get("customerName")
+  const leadPropertyAddress = searchParams.get("propertyAddress")
+  const leadServiceType = searchParams.get("serviceType")
+
+  const [customerName, setCustomerName] = useState(leadCustomerName || "")
+  const [propertyAddress, setPropertyAddress] = useState(leadPropertyAddress || "")
   const [driveTimeMinutes, setDriveTimeMinutes] = useState(30)
   const [lineItems, setLineItems] = useState<LineItemData[]>([])
 
-  const loadouts: any[] = []
+  const loadouts = useQuery(
+    api.loadouts.list,
+    user?.organizationId ? { organizationId: user.organizationId as any } : "skip"
+  )
+
+  const createProposal = useMutation(api.proposals.create)
+  const convertToProposal = useMutation(api.leads.convertToProposal)
 
   const handleAddLineItem = (item: LineItemData) => {
     const newItem = {
@@ -44,18 +59,51 @@ export default function NewProposalPage() {
   const totalHours = lineItems.reduce((sum, item) => sum + item.totalHours, 0)
 
   const handleSave = async () => {
-    if (!user || lineItems.length === 0) return
+    if (!user?.organizationId || lineItems.length === 0) return
 
     setIsSaving(true)
-    console.log("[v0] Saving proposal:", { customerName, propertyAddress, driveTimeMinutes, lineItems })
-    // Would save to Convex when connected
-    setTimeout(() => {
+    try {
+      // Create the proposal
+      const proposalId = await createProposal({
+        organizationId: user.organizationId as any,
+        customerName,
+        propertyAddress,
+        driveTimeMinutes,
+        lineItems: lineItems.map(item => ({
+          lineNumber: item.lineNumber,
+          serviceType: item.serviceType,
+          description: item.description,
+          productionHours: item.productionHours,
+          transportHours: item.transportHours,
+          bufferHours: item.bufferHours,
+          totalHours: item.totalHours,
+          hourlyRate: item.hourlyRate,
+          totalCost: item.totalCost,
+          lineTotal: item.lineTotal,
+          loadoutId: item.loadoutId as any,
+          loadoutName: item.loadoutName,
+        })),
+      })
+
+      // If this is a conversion from a lead, update the lead status
+      if (leadId && proposalId) {
+        await convertToProposal({
+          leadId: leadId as any,
+          proposalId: proposalId as any,
+        })
+      }
+
+      // Redirect to proposals list
+      router.push("/dashboard/proposals")
+    } catch (error) {
+      console.error("Failed to save proposal:", error)
+      alert("Failed to save proposal. Please try again.")
+    } finally {
       setIsSaving(false)
-      alert("Demo mode: Proposal saved! In production, this would redirect to the proposal detail page.")
-    }, 1000)
+    }
   }
 
-  if (loadouts.length === 0) {
+  if (loadouts && loadouts.length === 0) {
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-4">

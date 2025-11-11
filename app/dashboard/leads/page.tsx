@@ -42,8 +42,10 @@ import {
   Trash2,
   Plus,
   DollarSign,
+  FileText,
 } from "lucide-react"
 import { Textarea } from "@/components/ui/textarea"
+import Link from "next/link"
 
 const STATUS_COLORS = {
   new: "default",
@@ -364,6 +366,16 @@ export default function LeadsPage() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
+                        {lead.status !== "converted" && (
+                          <Link
+                            href={`/dashboard/proposals/new?leadId=${lead._id}&customerName=${encodeURIComponent(lead.customerName)}&propertyAddress=${encodeURIComponent(lead.propertyAddress)}&serviceType=${encodeURIComponent(lead.serviceType)}`}
+                          >
+                            <Button variant="outline" size="sm" className="gap-1">
+                              <FileText className="h-3 w-3" />
+                              Convert
+                            </Button>
+                          </Link>
+                        )}
                         <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(lead)}>
                           <Edit className="h-4 w-4" />
                         </Button>

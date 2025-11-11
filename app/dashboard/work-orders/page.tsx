@@ -41,8 +41,10 @@ import {
   Plus,
   DollarSign,
   Users,
+  Receipt,
 } from "lucide-react"
 import { Textarea } from "@/components/ui/textarea"
+import { useRouter } from "next/navigation"
 
 const STATUS_COLORS = {
   scheduled: "default",
@@ -61,8 +63,10 @@ const SERVICE_OPTIONS = [
 
 export default function WorkOrdersPage() {
   const { user } = useAuth()
+  const router = useRouter()
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingWorkOrder, setEditingWorkOrder] = useState<any>(null)
+  const [generatingInvoice, setGeneratingInvoice] = useState<string | null>(null)
 
   const [formData, setFormData] = useState({
     customerName: "",
@@ -94,6 +98,8 @@ export default function WorkOrdersPage() {
   const createWorkOrder = useMutation(api.workOrders.create)
   const updateWorkOrder = useMutation(api.workOrders.update)
   const deleteWorkOrder = useMutation(api.workOrders.remove)
+  const generateDepositInvoice = useMutation(api.invoices.generateDepositInvoice)
+  const generateFinalInvoice = useMutation(api.invoices.generateFinalInvoice)
 
   const handleOpenDialog = (workOrder?: any) => {
     if (workOrder) {
@@ -164,6 +170,46 @@ export default function WorkOrdersPage() {
   const handleDelete = async (workOrderId: string) => {
     if (confirm("Are you sure you want to delete this work order?")) {
       await deleteWorkOrder({ workOrderId: workOrderId as any })
+    }
+  }
+
+  const handleGenerateDepositInvoice = async (workOrderId: string) => {
+    if (confirm("Generate a deposit invoice for this work order?")) {
+      setGeneratingInvoice(workOrderId)
+      try {
+        const invoiceId = await generateDepositInvoice({
+          workOrderId: workOrderId as any,
+          taxRate: 0, // Default tax rate, can be customized
+        })
+        if (invoiceId) {
+          router.push("/dashboard/invoices")
+        }
+      } catch (error: any) {
+        console.error("Failed to generate deposit invoice:", error)
+        alert(error?.message || "Failed to generate deposit invoice. Please try again.")
+      } finally {
+        setGeneratingInvoice(null)
+      }
+    }
+  }
+
+  const handleGenerateFinalInvoice = async (workOrderId: string) => {
+    if (confirm("Generate the final invoice for this completed work order?")) {
+      setGeneratingInvoice(workOrderId)
+      try {
+        const invoiceId = await generateFinalInvoice({
+          workOrderId: workOrderId as any,
+          taxRate: 0, // Default tax rate, can be customized
+        })
+        if (invoiceId) {
+          router.push("/dashboard/invoices")
+        }
+      } catch (error: any) {
+        console.error("Failed to generate final invoice:", error)
+        alert(error?.message || "Failed to generate final invoice. Please try again.")
+      } finally {
+        setGeneratingInvoice(null)
+      }
     }
   }
 
@@ -340,6 +386,28 @@ export default function WorkOrdersPage() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
+                        {wo.projectId && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleGenerateDepositInvoice(wo._id)}
+                            disabled={generatingInvoice === wo._id}
+                          >
+                            <Receipt className="h-3 w-3 mr-1" />
+                            Deposit
+                          </Button>
+                        )}
+                        {wo.status === "completed" && wo.projectId && (
+                          <Button
+                            variant="default"
+                            size="sm"
+                            onClick={() => handleGenerateFinalInvoice(wo._id)}
+                            disabled={generatingInvoice === wo._id}
+                          >
+                            <Receipt className="h-3 w-3 mr-1" />
+                            Final
+                          </Button>
+                        )}
                         <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(wo)}>
                           <Edit className="h-4 w-4" />
                         </Button>

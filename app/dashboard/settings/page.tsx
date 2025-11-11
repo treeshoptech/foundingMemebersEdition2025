@@ -23,6 +23,7 @@ export default function SettingsPage() {
   const [logoPreview, setLogoPreview] = useState<string>("")
   const [businessName, setBusinessName] = useState("")
   const [businessAddress, setBusinessAddress] = useState("")
+  const [depositPercentage, setDepositPercentage] = useState("")
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const organization = useQuery(
@@ -38,6 +39,7 @@ export default function SettingsPage() {
     if (organization) {
       setBusinessName(organization.name || "")
       setBusinessAddress(organization.businessAddress || "")
+      setDepositPercentage(organization.depositPercentage?.toString() || "25")
       setLogoUrl(organization.logoUrl || "")
       setLogoPreview(organization.logoUrl || "")
     }
@@ -117,6 +119,7 @@ export default function SettingsPage() {
         organizationId: user.organizationId as any,
         name: businessName || undefined,
         businessAddress: businessAddress || undefined,
+        depositPercentage: depositPercentage ? parseFloat(depositPercentage) : undefined,
         logoUrl: finalLogoUrl || undefined,
       })
 
@@ -174,6 +177,28 @@ export default function SettingsPage() {
             />
             <p className="text-sm text-muted-foreground">
               This address is used as the starting point for calculating drive times to job sites
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="depositPercentage">Default Deposit Percentage</Label>
+            <div className="flex items-center gap-2">
+              <Input
+                id="depositPercentage"
+                type="number"
+                min="0"
+                max="100"
+                step="1"
+                value={depositPercentage}
+                onChange={(e) => setDepositPercentage(e.target.value)}
+                placeholder="25"
+                disabled={!canEditCompanyInfo}
+                className="max-w-[200px]"
+              />
+              <span className="text-sm text-muted-foreground">%</span>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              This percentage is used to calculate deposit invoices when projects are created (default: 25%)
             </p>
           </div>
 
