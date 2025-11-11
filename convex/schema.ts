@@ -233,15 +233,43 @@ export default defineSchema({
   loadouts: defineTable({
     organizationId: v.id("organizations"),
     name: v.string(),
-    serviceType: v.string(),
+    description: v.optional(v.string()),
+    serviceType: v.string(), // Forestry Mulching, Stump Grinding, Land Clearing, etc.
+
+    // Equipment & Crew
     equipmentIds: v.array(v.id("equipment")),
     employeeIds: v.array(v.id("employees")),
-    productionRate: v.number(),
-    totalLoadoutCostPerHour: v.number(),
-    selectedMargin: v.number(),
-    billingRate: v.number(),
+
+    // Production & Performance
+    productionRate: v.number(), // PpH (Points per Hour) or StumpScore/hour
+
+    // Cost Components (calculated)
+    totalEquipmentCost: v.number(), // Sum of all equipment costs per hour
+    totalLaborCost: v.number(), // Sum of all employee true costs per hour
+    overheadCost: v.number(), // Admin, office, general overhead
+    totalLoadoutCost: v.number(), // Equipment + Labor + Overhead
+
+    // Multi-Margin Billing Rates (all pre-calculated)
+    billingRate30: v.number(), // Cost ÷ 0.70 (30% margin)
+    billingRate40: v.number(), // Cost ÷ 0.60 (40% margin)
+    billingRate50: v.number(), // Cost ÷ 0.50 (50% margin)
+    billingRate60: v.number(), // Cost ÷ 0.40 (60% margin)
+    billingRate70: v.number(), // Cost ÷ 0.30 (70% margin)
+
+    // Transport Rate (for calculator usage)
+    transportRate: v.optional(v.number()), // 0.30 or 0.50 depending on equipment
+
+    // Status
+    isActive: v.boolean(), // Can this loadout be used for new quotes?
+
+    // Notes
+    notes: v.optional(v.string()),
+
     createdAt: v.number(),
-  }).index("by_organization", ["organizationId"]),
+  })
+    .index("by_organization", ["organizationId"])
+    .index("by_service_type", ["organizationId", "serviceType"])
+    .index("by_active", ["organizationId", "isActive"]),
 
   // Customers
   customers: defineTable({
