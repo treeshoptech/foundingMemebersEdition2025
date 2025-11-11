@@ -4,7 +4,7 @@ export default authkitMiddleware({
   eagerAuth: true,
   middlewareAuth: {
     enabled: true,
-    unauthenticatedPaths: ['/', '/sign-in', '/sign-up', '/callback', '/manifest.json'],
+    unauthenticatedPaths: ['/', '/sign-in', '/sign-up', '/api/auth/workos/callback', '/manifest.json'],
   },
 });
 
