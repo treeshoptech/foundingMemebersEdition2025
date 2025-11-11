@@ -19,11 +19,13 @@ import {
   Receipt,
   Settings,
   BarChart3,
+  X,
 } from "lucide-react"
 import Link from "next/link"
 import { useState } from "react"
 import { cn } from "@/lib/utils"
 import Image from "next/image"
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -109,36 +111,74 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-card border-b">
         <div className="flex items-center justify-between h-16 px-4">
           <Image src="/logo.png" alt="TreeShop" width={100} height={32} className="object-contain" />
-          <Button variant="ghost" size="icon" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+          <Button variant="ghost" size="icon" onClick={() => setIsMobileMenuOpen(true)}>
             <Menu className="h-6 w-6" />
           </Button>
         </div>
+      </div>
 
-        {/* Mobile Menu */}
-        {isMobileMenuOpen && (
-          <div className="border-t bg-card">
-            <nav className="space-y-1 p-3">
+      {/* Mobile Menu Sheet (60% width) */}
+      <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+        <SheetContent side="right" className="w-[60vw] sm:w-[60vw] p-0">
+          <div className="flex flex-col h-full">
+            <SheetHeader className="border-b px-4 py-4">
+              <SheetTitle className="flex items-center justify-between">
+                <Image src="/logo.png" alt="TreeShop" width={100} height={32} className="object-contain" />
+              </SheetTitle>
+            </SheetHeader>
+
+            {/* Navigation */}
+            <nav className="flex-1 space-y-1 px-3 py-4 overflow-y-auto">
               {navigation.map((item) => {
-                const isActive = pathname === item.href
+                const isActive = pathname === item.href || pathname.startsWith(item.href + "/")
                 return (
                   <Link key={item.name} href={item.href} onClick={() => setIsMobileMenuOpen(false)}>
-                    <Button variant={isActive ? "secondary" : "ghost"} className="w-full justify-start gap-3">
+                    <Button
+                      variant={isActive ? "secondary" : "ghost"}
+                      className={cn(
+                        "w-full justify-start gap-3",
+                        isActive && "bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary",
+                      )}
+                    >
                       <item.icon className="h-5 w-5" />
-                      {item.name}
+                      <span className="text-sm">{item.name}</span>
                     </Button>
                   </Link>
                 )
               })}
             </nav>
-            <div className="border-t p-4">
-              <Button variant="outline" className="w-full justify-start gap-2 bg-transparent" onClick={signOut}>
+
+            {/* User Info */}
+            <div className="border-t p-4 space-y-2">
+              <div className="flex items-center gap-3 mb-3">
+                {user?.organizationLogo ? (
+                  <Image
+                    src={user.organizationLogo}
+                    alt={user.organizationName}
+                    width={32}
+                    height={32}
+                    className="rounded-lg object-cover"
+                  />
+                ) : (
+                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <span className="text-primary font-bold text-sm">
+                      {user?.organizationName?.charAt(0) || "T"}
+                    </span>
+                  </div>
+                )}
+                <div className="text-xs flex-1 min-w-0">
+                  <div className="font-medium truncate">{user?.name}</div>
+                  <div className="text-muted-foreground truncate">{user?.organizationName}</div>
+                </div>
+              </div>
+              <Button variant="outline" className="w-full justify-start gap-2 bg-transparent text-sm" onClick={signOut}>
                 <LogOut className="h-4 w-4" />
                 Sign Out
               </Button>
             </div>
           </div>
-        )}
-      </div>
+        </SheetContent>
+      </Sheet>
 
       <div className="md:pr-64 pt-16 md:pt-0">
         <main className="p-6 md:p-8">{children}</main>
