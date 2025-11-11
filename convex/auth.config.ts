@@ -1,4 +1,4 @@
-const clientId = process.env.WORKOS_CLIENT_ID;
+const clientId = 'client_01K9HJZ1TA48RKQ41YPRFTFWA9';
 
 const authConfig = {
   providers: [
