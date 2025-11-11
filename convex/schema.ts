@@ -1,30 +1,47 @@
 import { defineSchema, defineTable } from "convex/server"
+import { authTables } from "@convex-dev/auth/server"
 import { v } from "convex/values"
 
 export default defineSchema({
+  // Convex Auth tables (handles authentication)
+  ...authTables,
+
   // Organizations (Multi-tenant root)
   organizations: defineTable({
     name: v.string(),
     businessAddress: v.string(),
     latitude: v.optional(v.number()),
     longitude: v.optional(v.number()),
-    workosOrgId: v.optional(v.string()), // WorkOS organization ID for mapping
     logoUrl: v.optional(v.string()), // Company logo URL
     createdAt: v.number(),
-  }).index("by_workos_org", ["workosOrgId"]),
+  }),
 
-  // Users (linked to organizations)
+  // Users (linked to organizations and Convex Auth)
   users: defineTable({
+    authUserId: v.id("authAccounts"), // Link to Convex Auth user
     email: v.string(),
     name: v.string(),
-    workosUserId: v.optional(v.string()), // WorkOS user ID from JWT
-    passwordHash: v.optional(v.string()), // DEPRECATED - keeping for migration
     organizationId: v.id("organizations"),
     role: v.union(v.literal("owner"), v.literal("admin"), v.literal("manager"), v.literal("estimator")),
     createdAt: v.number(),
   })
     .index("by_email", ["email"])
-    .index("by_workos_user", ["workosUserId"])
+    .index("by_auth_user", ["authUserId"])
+    .index("by_organization", ["organizationId"]),
+
+  // Invitations for employee onboarding
+  invitations: defineTable({
+    email: v.string(),
+    organizationId: v.id("organizations"),
+    role: v.union(v.literal("owner"), v.literal("admin"), v.literal("manager"), v.literal("estimator")),
+    token: v.string(), // Unique invite token
+    invitedBy: v.id("users"),
+    status: v.union(v.literal("pending"), v.literal("accepted"), v.literal("expired")),
+    expiresAt: v.number(),
+    createdAt: v.number(),
+  })
+    .index("by_email", ["email"])
+    .index("by_token", ["token"])
     .index("by_organization", ["organizationId"]),
 
   // Equipment - Enhanced with detailed categorization and tracking

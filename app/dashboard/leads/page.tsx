@@ -80,10 +80,7 @@ export default function LeadsPage() {
     notes: "",
   })
 
-  const leads = useQuery(
-    api.leads.list,
-    user?.organizationId ? { organizationId: user.organizationId as any } : "skip"
-  )
+  const leads = useQuery(api.leads.list)
 
   const createLead = useMutation(api.leads.create)
   const updateLead = useMutation(api.leads.update)
@@ -138,7 +135,6 @@ export default function LeadsPage() {
         })
       } else {
         await createLead({
-          organizationId: user.organizationId as any,
           customerName: formData.customerName,
           propertyAddress: formData.propertyAddress,
           phoneNumber: formData.phoneNumber || undefined,

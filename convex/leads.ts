@@ -1,24 +1,25 @@
-import { v } from "convex/values"
-import { mutation, query } from "./_generated/server"
+import { v } from "convex/values";
+import { mutation, query } from "./_generated/server";
+import { getUserOrganization } from "./lib/auth";
 
-// Get all leads for organization
+// Get all leads for current user's organization
 export const list = query({
-  args: {
-    organizationId: v.id("organizations"),
-  },
-  handler: async (ctx, args) => {
+  args: {},
+  handler: async (ctx) => {
+    const organizationId = await getUserOrganization(ctx);
+
     const leads = await ctx.db
       .query("leads")
-      .withIndex("by_organization", (q) => q.eq("organizationId", args.organizationId))
-      .collect()
-    return leads
+      .withIndex("by_organization", (q) => q.eq("organizationId", organizationId))
+      .collect();
+
+    return leads;
   },
-})
+});
 
 // Create a new lead
 export const create = mutation({
   args: {
-    organizationId: v.id("organizations"),
     customerName: v.string(),
     propertyAddress: v.string(),
     phoneNumber: v.optional(v.string()),
@@ -29,8 +30,10 @@ export const create = mutation({
     notes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    const organizationId = await getUserOrganization(ctx);
+
     const leadId = await ctx.db.insert("leads", {
-      organizationId: args.organizationId,
+      organizationId,
       customerName: args.customerName,
       propertyAddress: args.propertyAddress,
       phoneNumber: args.phoneNumber,
@@ -40,11 +43,11 @@ export const create = mutation({
       estimatedValue: args.estimatedValue,
       notes: args.notes,
       createdAt: Date.now(),
-    })
+    });
 
-    return leadId
+    return leadId;
   },
-})
+});
 
 // Update lead
 export const update = mutation({
@@ -60,15 +63,31 @@ export const update = mutation({
     notes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const { leadId, ...updates } = args
-    await ctx.db.patch(leadId, updates)
+    const organizationId = await getUserOrganization(ctx);
+
+    // Verify lead belongs to user's organization
+    const lead = await ctx.db.get(args.leadId);
+    if (!lead || lead.organizationId !== organizationId) {
+      throw new Error("Lead not found or access denied");
+    }
+
+    const { leadId, ...updates } = args;
+    await ctx.db.patch(leadId, updates);
   },
-})
+});
 
 // Delete lead
 export const remove = mutation({
   args: { leadId: v.id("leads") },
   handler: async (ctx, args) => {
-    await ctx.db.delete(args.leadId)
+    const organizationId = await getUserOrganization(ctx);
+
+    // Verify lead belongs to user's organization
+    const lead = await ctx.db.get(args.leadId);
+    if (!lead || lead.organizationId !== organizationId) {
+      throw new Error("Lead not found or access denied");
+    }
+
+    await ctx.db.delete(args.leadId);
   },
-})
+});
