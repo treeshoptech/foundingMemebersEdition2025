@@ -158,3 +158,76 @@ export const remove = mutation({
     await ctx.db.delete(args.id)
   },
 })
+
+// Convert accepted proposal to project + work order
+export const convertToProject = mutation({
+  args: {
+    proposalId: v.id("proposals"),
+  },
+  handler: async (ctx, args) => {
+    // Get the proposal
+    const proposal = await ctx.db.get(args.proposalId)
+    if (!proposal) throw new Error("Proposal not found")
+    if (proposal.status !== "accepted") {
+      throw new Error("Only accepted proposals can be converted to projects")
+    }
+
+    // Calculate total estimated hours from line items
+    const estimatedHours = proposal.lineItems.reduce(
+      (sum, item) => sum + item.totalHours,
+      0
+    )
+
+    // Create the project
+    const projectId = await ctx.db.insert("projects", {
+      organizationId: proposal.organizationId,
+      leadId: proposal.leadId,
+      proposalId: args.proposalId,
+      workOrderId: undefined,
+      invoiceIds: [],
+      customerName: proposal.customerName,
+      propertyAddress: proposal.propertyAddress,
+      serviceType: proposal.lineItems[0]?.serviceType || "General Service",
+      status: "active",
+      totalInvestment: proposal.totalInvestment,
+      startDate: Date.now(),
+      completionDate: undefined,
+      notes: undefined,
+      createdAt: Date.now(),
+    })
+
+    // Create the work order
+    const workOrderId = await ctx.db.insert("workOrders", {
+      organizationId: proposal.organizationId,
+      projectId: projectId,
+      proposalId: args.proposalId,
+      customerName: proposal.customerName,
+      propertyAddress: proposal.propertyAddress,
+      serviceType: proposal.lineItems[0]?.serviceType || "General Service",
+      status: "scheduled",
+      scheduledDate: undefined,
+      completedDate: undefined,
+      assignedEmployeeIds: [],
+      assignedEquipmentIds: [],
+      estimatedHours: estimatedHours,
+      actualHours: undefined,
+      notes: undefined,
+      createdAt: Date.now(),
+    })
+
+    // Update project with work order ID
+    await ctx.db.patch(projectId, {
+      workOrderId: workOrderId,
+    })
+
+    // Update proposal with project ID
+    await ctx.db.patch(args.proposalId, {
+      projectId: projectId,
+    })
+
+    return {
+      projectId,
+      workOrderId,
+    }
+  },
+})

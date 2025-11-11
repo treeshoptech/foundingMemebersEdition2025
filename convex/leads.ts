@@ -72,3 +72,23 @@ export const remove = mutation({
     await ctx.db.delete(args.leadId)
   },
 })
+
+// Convert lead to proposal (creates proposal from lead and marks lead as converted)
+export const convertToProposal = mutation({
+  args: {
+    leadId: v.id("leads"),
+    proposalId: v.id("proposals"),
+  },
+  handler: async (ctx, args) => {
+    // Update lead status to "converted" and link to proposal
+    await ctx.db.patch(args.leadId, {
+      status: "converted",
+      proposalId: args.proposalId,
+    })
+
+    // Update proposal with leadId
+    await ctx.db.patch(args.proposalId, {
+      leadId: args.leadId,
+    })
+  },
+})

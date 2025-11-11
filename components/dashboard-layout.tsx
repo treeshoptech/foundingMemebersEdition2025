@@ -19,6 +19,7 @@ import {
   Receipt,
   Settings,
   BarChart3,
+  FolderOpen,
 } from "lucide-react"
 import Link from "next/link"
 import { useState } from "react"
@@ -29,6 +30,7 @@ const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Leads", href: "/dashboard/leads", icon: UserPlus },
   { name: "Proposals", href: "/dashboard/proposals", icon: FileText },
+  { name: "Projects", href: "/dashboard/projects", icon: FolderOpen },
   { name: "Work Orders", href: "/dashboard/work-orders", icon: ClipboardList },
   { name: "Invoices", href: "/dashboard/invoices", icon: Receipt },
   { name: "Equipment", href: "/dashboard/equipment", icon: Wrench },

@@ -10,6 +10,7 @@ export default defineSchema({
     longitude: v.optional(v.number()),
     workosOrgId: v.optional(v.string()), // WorkOS organization ID for mapping
     logoUrl: v.optional(v.string()), // Company logo URL
+    depositPercentage: v.optional(v.number()), // Default deposit percentage (e.g., 25 for 25%)
     createdAt: v.number(),
   }).index("by_workos_org", ["workosOrgId"]),
 
@@ -252,13 +253,18 @@ export default defineSchema({
     status: v.string(),
     estimatedValue: v.optional(v.number()),
     notes: v.optional(v.string()),
+    proposalId: v.optional(v.id("proposals")), // Link to converted proposal
     createdAt: v.number(),
-  }).index("by_organization", ["organizationId"]),
+  })
+    .index("by_organization", ["organizationId"])
+    .index("by_proposal", ["proposalId"]),
 
   // Proposals
   proposals: defineTable({
     organizationId: v.id("organizations"),
     customerId: v.optional(v.id("customers")),
+    leadId: v.optional(v.id("leads")), // Link to original lead
+    projectId: v.optional(v.id("projects")), // Link to project if accepted
     customerName: v.string(),
     propertyAddress: v.string(),
     driveTimeMinutes: v.number(),
@@ -288,24 +294,45 @@ export default defineSchema({
     financingMonthlyPayment: v.optional(v.number()), // Calculated monthly payment
 
     createdAt: v.number(),
-  }).index("by_organization", ["organizationId"]),
+  })
+    .index("by_organization", ["organizationId"])
+    .index("by_lead", ["leadId"])
+    .index("by_project", ["projectId"]),
 
-  // Projects
+  // Projects (Central hub for the full pipeline)
   projects: defineTable({
     organizationId: v.id("organizations"),
-    proposalId: v.optional(v.id("proposals")),
+    leadId: v.optional(v.id("leads")), // Original lead
+    proposalId: v.id("proposals"), // Accepted proposal
+    workOrderId: v.optional(v.id("workOrders")), // Work order for this project
+    invoiceIds: v.array(v.id("invoices")), // All invoices (deposit, final, etc.)
+
+    // Customer Info
     customerName: v.string(),
     propertyAddress: v.string(),
     serviceType: v.string(),
-    status: v.string(),
+
+    // Project Status & Financials
+    status: v.string(), // active, on-hold, completed, cancelled
     totalInvestment: v.number(),
+
+    // Timeline
     startDate: v.optional(v.number()),
     completionDate: v.optional(v.number()),
+
+    // Notes
+    notes: v.optional(v.string()),
+
     createdAt: v.number(),
-  }).index("by_organization", ["organizationId"]),
+  })
+    .index("by_organization", ["organizationId"])
+    .index("by_proposal", ["proposalId"])
+    .index("by_lead", ["leadId"])
+    .index("by_status", ["organizationId", "status"]),
 
   workOrders: defineTable({
     organizationId: v.id("organizations"),
+    projectId: v.optional(v.id("projects")), // Link to parent project
     proposalId: v.optional(v.id("proposals")),
     customerName: v.string(),
     propertyAddress: v.string(),
@@ -321,14 +348,17 @@ export default defineSchema({
     createdAt: v.number(),
   })
     .index("by_organization", ["organizationId"])
+    .index("by_project", ["projectId"])
     .index("by_proposal", ["proposalId"])
     .index("by_status", ["organizationId", "status"]),
 
   invoices: defineTable({
     organizationId: v.id("organizations"),
+    projectId: v.optional(v.id("projects")), // Link to parent project
     proposalId: v.optional(v.id("proposals")),
     workOrderId: v.optional(v.id("workOrders")),
     invoiceNumber: v.string(),
+    invoiceType: v.union(v.literal("deposit"), v.literal("final"), v.literal("balance")), // Type of invoice
     customerName: v.string(),
     customerEmail: v.optional(v.string()),
     propertyAddress: v.string(),
@@ -357,6 +387,8 @@ export default defineSchema({
     createdAt: v.number(),
   })
     .index("by_organization", ["organizationId"])
+    .index("by_project", ["projectId"])
     .index("by_invoice_number", ["organizationId", "invoiceNumber"])
-    .index("by_status", ["organizationId", "status"]),
+    .index("by_status", ["organizationId", "status"])
+    .index("by_type", ["organizationId", "invoiceType"]),
 })
