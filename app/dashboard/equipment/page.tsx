@@ -8,17 +8,20 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { EquipmentForm, type EquipmentFormData } from "@/components/equipment-form"
-import { Plus, Pencil, Trash2, Loader2, AlertCircle, CheckCircle2 } from "lucide-react"
+import { Plus, Pencil, Trash2, Loader2, AlertCircle, CheckCircle2, Eye } from "lucide-react"
 import { useOrganization } from "@/providers/organization-provider"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { getCategories } from "@/lib/equipment-constants"
+import { EquipmentDetailModal } from "@/components/equipment-detail-modal"
+import { EquipmentReporting } from "@/components/equipment-reporting"
 
 export default function EquipmentPage() {
   const { currentOrganization } = useOrganization()
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingId, setEditingId] = useState<Id<"equipment"> | null>(null)
   const [selectedCategory, setSelectedCategory] = useState<string>("all")
+  const [detailViewId, setDetailViewId] = useState<Id<"equipment"> | null>(null)
 
   const equipment = useQuery(
     api.equipment.list,
@@ -69,6 +72,7 @@ export default function EquipmentPage() {
   }
 
   const editingEquipment = equipment?.find((e) => e._id === editingId)
+  const detailViewEquipment = equipment?.find((e) => e._id === detailViewId)
 
   // Filter equipment by category
   const filteredEquipment = equipment
@@ -123,6 +127,14 @@ export default function EquipmentPage() {
           Add Equipment
         </Button>
       </div>
+
+      <Tabs defaultValue="inventory" className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="inventory">Inventory</TabsTrigger>
+          <TabsTrigger value="reports">Reports & Analytics</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="inventory" className="space-y-6">
 
       {/* Equipment Stats */}
       <div className="grid gap-4 md:grid-cols-4">
@@ -221,7 +233,7 @@ export default function EquipmentPage() {
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Hours</TableHead>
                   <TableHead className="text-right">Cost/Hour</TableHead>
-                  <TableHead className="w-[100px]">Actions</TableHead>
+                  <TableHead className="w-[140px]">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -259,10 +271,13 @@ export default function EquipmentPage() {
                     <TableCell className="text-right font-semibold">${item.totalCostPerHour.toFixed(2)}</TableCell>
                     <TableCell>
                       <div className="flex gap-2">
-                        <Button variant="ghost" size="icon" onClick={() => handleEdit(item._id)}>
+                        <Button variant="ghost" size="icon" onClick={() => setDetailViewId(item._id)} title="View Details">
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => handleEdit(item._id)} title="Edit">
                           <Pencil className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleDelete(item._id)}>
+                        <Button variant="ghost" size="icon" onClick={() => handleDelete(item._id)} title="Delete">
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
@@ -274,6 +289,12 @@ export default function EquipmentPage() {
           )}
         </CardContent>
       </Card>
+        </TabsContent>
+
+        <TabsContent value="reports">
+          <EquipmentReporting equipment={equipment || []} />
+        </TabsContent>
+      </Tabs>
 
       <EquipmentForm
         open={isFormOpen}
@@ -283,6 +304,14 @@ export default function EquipmentPage() {
         }}
         onSubmit={handleSubmit}
         initialData={editingEquipment}
+      />
+
+      <EquipmentDetailModal
+        equipment={detailViewEquipment || null}
+        open={!!detailViewId}
+        onOpenChange={(open) => {
+          if (!open) setDetailViewId(null)
+        }}
       />
     </div>
   )
