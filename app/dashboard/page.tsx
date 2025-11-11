@@ -10,7 +10,7 @@ import { useQuery } from "convex/react"
 import { api } from "@/convex/_generated/api"
 
 export default function DashboardPage() {
-  const { user, error, retryAuth } = useAuth()
+  const { user, error } = useAuth()
 
   // Connect to live Convex data
   const equipment = useQuery(api.equipment.list, user?.organizationId ? { organizationId: user.organizationId as any } : "skip") || []
@@ -28,22 +28,6 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-8">
-      {error && (
-        <Card className="border-destructive bg-destructive/10">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-semibold text-destructive">Authentication Error</p>
-                <p className="text-sm text-muted-foreground">{error}</p>
-              </div>
-              <Button onClick={retryAuth} variant="outline" size="sm">
-                Retry
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
       <div>
         <h1 className="text-3xl font-bold">Dashboard</h1>
         <p className="text-muted-foreground">Welcome back, {user?.name}</p>

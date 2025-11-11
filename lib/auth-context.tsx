@@ -1,105 +1,79 @@
-"use client"
+"use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react"
-import { useAuth as useWorkOSAuth } from "@workos-inc/authkit-nextjs/components"
-import { useQuery, useMutation } from "convex/react"
-import { api } from "@/convex/_generated/api"
+import React, { createContext, useContext, useEffect } from "react";
+import { useAuthActions } from "@convex-dev/auth/react";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { useRouter } from "next/navigation";
 
 interface User {
-  userId: string
-  organizationId: string
-  organizationName: string
-  organizationLogo?: string
-  name: string
-  email: string
-  role: "owner" | "admin" | "manager" | "estimator"
+  userId: string;
+  organizationId: string;
+  organizationName: string;
+  organizationLogo?: string;
+  name: string;
+  email: string;
+  role: "owner" | "admin" | "manager" | "estimator";
 }
 
 interface AuthContextType {
-  user: User | null
-  isLoading: boolean
-  error: string | null
-  signIn: (user: User) => void
-  signOut: () => void
-  retryAuth: () => void
+  user: User | null;
+  isLoading: boolean;
+  error: string | null;
+  signOut: () => void;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined)
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const { user: workosUser, loading: workosLoading } = useWorkOSAuth()
-  const getOrCreateUser = useMutation(api.users.getOrCreateUser)
-  const [error, setError] = useState<string | null>(null)
-  const [isCreatingUser, setIsCreatingUser] = useState(false)
+  const { signOut: convexSignOut } = useAuthActions();
+  const router = useRouter();
 
-  // Get or create Convex user based on WorkOS user
-  const convexUser = useQuery(
-    api.users.getCurrentUser,
-    workosUser?.id ? { workosUserId: workosUser.id } : "skip"
-  )
+  // Get current user profile
+  const currentUser = useQuery(api.users.getCurrentUser);
+  const isLoading = currentUser === undefined;
 
-  // Auto-create user in Convex on first login with error handling
-  useEffect(() => {
-    if (workosUser && !convexUser && !workosLoading && !isCreatingUser) {
-      setIsCreatingUser(true)
-      setError(null)
+  // Get organization details if user exists
+  const organization = useQuery(
+    api.organizations.getCurrent,
+    currentUser ? {} : "skip"
+  );
 
-      getOrCreateUser({
-        workosUserId: workosUser.id,
-        email: workosUser.email,
-        name: `${workosUser.firstName || ""} ${workosUser.lastName || ""}`.trim() || workosUser.email,
-      })
-        .then(() => {
-          setIsCreatingUser(false)
-        })
-        .catch((err) => {
-          console.error("Failed to create user in Convex:", err)
-          setError("Failed to initialize your account. Please try again.")
-          setIsCreatingUser(false)
-        })
-    }
-  }, [workosUser, convexUser, workosLoading, isCreatingUser, getOrCreateUser])
-
-  const user: User | null = convexUser
+  const user: User | null = currentUser
     ? {
-        userId: convexUser._id,
-        organizationId: convexUser.organizationId,
-        organizationName: "", // Will load from org
-        name: convexUser.name,
-        email: convexUser.email,
-        role: convexUser.role,
+        userId: currentUser._id,
+        organizationId: currentUser.organizationId,
+        organizationName: organization?.name || "",
+        organizationLogo: organization?.logoUrl,
+        name: currentUser.name,
+        email: currentUser.email,
+        role: currentUser.role,
       }
-    : null
+    : null;
 
-  const signOut = () => {
-    window.location.href = "/auth/logout"
-  }
-
-  const retryAuth = () => {
-    setError(null)
-    setIsCreatingUser(false)
-  }
+  const signOut = async () => {
+    await convexSignOut();
+    router.push("/sign-in");
+  };
 
   return (
     <AuthContext.Provider
       value={{
         user,
-        isLoading: Boolean(workosLoading || isCreatingUser || (workosUser && !convexUser && !error)),
-        error,
-        signIn: () => {},
+        isLoading,
+        error: null,
         signOut,
-        retryAuth,
       }}
     >
       {children}
     </AuthContext.Provider>
-  )
+  );
 }
 
 export function useAuth() {
-  const context = useContext(AuthContext)
+  const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider")
+    throw new Error("useAuth must be used within an AuthProvider");
   }
-  return context
+  return context;
 }
