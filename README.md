@@ -1,30 +1,45 @@
-# TreeShop web translation
+# TreeShop - Founding Members Edition
 
-*Automatically synced with your [v0.app](https://v0.app) deployments*
+Professional tree service management platform with scientific pricing.
 
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/treeshoptech/v0-tree-shop-web-translation)
-[![Built with v0](https://img.shields.io/badge/Built%20with-v0.app-black?style=for-the-badge)](https://v0.app/chat/i4xt3uSFUOb)
+[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://www.treeshopterminal.com)
 
 ## Overview
 
-This repository will stay in sync with your deployed chats on [v0.app](https://v0.app).
-Any changes you make to your deployed app will be automatically pushed to this repository from [v0.app](https://v0.app).
+TreeShop is the first-ever scientific pricing system for tree service companies. Built with revolutionary TreeShop Score™ technology and 80+ complexity factors (AFISS system) to transform how tree service companies price and manage their operations.
 
-## Deployment
+## Live Deployment
 
-Your project is live at:
+**Production:** [https://www.treeshopterminal.com](https://www.treeshopterminal.com)
 
-**[https://vercel.com/treeshoptech/v0-tree-shop-web-translation](https://vercel.com/treeshoptech/v0-tree-shop-web-translation)**
+**Features:**
+- Scientific pricing calculators (Forestry Mulching, Stump Grinding, Land Clearing)
+- Equipment & crew management
+- Customer & project tracking
+- Professional proposal generation
+- WorkOS authentication for founding members
 
-## Build your app
+## Tech Stack
 
-Continue building your app on:
+- **Framework:** Next.js 16 with Turbopack
+- **Database:** Convex
+- **Authentication:** WorkOS AuthKit
+- **UI:** Radix UI + Tailwind CSS
+- **Deployment:** Vercel
 
-**[https://v0.app/chat/i4xt3uSFUOb](https://v0.app/chat/i4xt3uSFUOb)**
+## Development
 
-## How It Works
+```bash
+npm install
+npm run dev
+```
 
-1. Create and modify your project using [v0.app](https://v0.app)
-2. Deploy your chats from the v0 interface
-3. Changes are automatically pushed to this repository
-4. Vercel deploys the latest version from this repository# Test auto-deploy
+Open [http://localhost:3000](http://localhost:3000)
+
+## WorkOS Configuration
+
+**Redirect URLs:**
+- Development: `http://localhost:3000/api/auth/workos/callback`
+- Production: `https://www.treeshopterminal.com/callback`
+
+See `WORKOS_SETUP.md` for complete authentication setup.

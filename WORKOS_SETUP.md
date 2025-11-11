@@ -22,7 +22,7 @@ http://localhost:3000/api/auth/workos/callback
 
 **Production:**
 ```
-https://foundingmembersedition.vercel.app/api/auth/workos/callback
+https://www.treeshopterminal.com/callback
 ```
 
 ### 2. **Enable AuthKit**
@@ -221,8 +221,7 @@ Check browser console for errors. Make sure you're not in incognito mode.
 | Environment | Redirect URL |
 |-------------|--------------|
 | Development | `http://localhost:3000/api/auth/workos/callback` |
-| Production  | `https://foundingmembersedition.vercel.app/api/auth/workos/callback` |
-| Custom Domain (future) | `https://app.treeshop.app/api/auth/workos/callback` |
+| Production  | `https://www.treeshopterminal.com/callback` |
 
 ---
 
